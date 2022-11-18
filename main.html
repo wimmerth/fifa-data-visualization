@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>FIFA Dashboard</title>
+        <link rel="icon" href="https://www.fifa.com/imgml/flags/4/1/1/411.png">
+        <!-- https://d3js.org/ -->
+        <script type="text/javascript" src="js/d3.v7.min.js"></script>
+        <!-- Your code -->
+        <script type="text/javascript" src="js/main.js"></script>
+<style type="text/css">
+
+svg {
+    display: block;
+    font-family: sans-serif;
+    font-size: 10px;
+}
+
+.button {
+  background-color: #4CAF50; /* Green */
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+}
+
+.label {
+  font-size: 16px;
+  color: #4CAF50; /* Green */
+  font-family: sans-serif;
+}
+
+</style>
+    </head>
+    <!-- Add a scrollable year selector in the top middle of the website -->
+    <body onload="createViz()">
+        <div id="main">
+            <div id="yearSelector" style="position: absolute; top: 0; left: 50%; transform: translate(-50%, 0);">
+                <button class="button" onclick="updateYear(-1)">-1</button>
+                <!-- text field to show currently selected year-->
+                <span class="label" id="yearLabel">2015</span>
+                <button class="button" onclick="updateYear(1)">+1</button>
+            </div>
+        </div>
+    </body>
+
+</html>
