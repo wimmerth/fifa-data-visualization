@@ -12,6 +12,7 @@ function updateYear(input){
         ctx.YEAR = ctx.YEAR + input;
         d3.select("#yearLabel").text(ctx.YEAR);
         console.log("Number of players in " + ctx.YEAR + ": " + ctx.playersPerYear[ctx.YEAR].length);
+        updatePlotsOnSelection(ctx.playersPerYear[ctx.YEAR]);
     } else {
         console.log("Year out of range");
     }
@@ -25,6 +26,7 @@ function createViz(){
     var rootG = svg.append("g").attr("id", "rootG");
     rootG.append("g").attr("id","bkgG");
     rootG.append("g").attr("id","footballfieldG");
+    rootG.append("g").attr("id", "bestPlayerListG");
     rootG.append("g").attr("id","comparisonG");
     rootG.append("g").attr("id","statsG");
 
@@ -36,12 +38,11 @@ function createViz(){
         .attr("height", ctx.height)
         .attr("fill", ctx.backgroundGrey);
 
-    createFootballField(ctx.grassGreen);
-    populateFootballField();
-    //loadData(svg);
+    initFootballField();
+    loadData();
 }
 
-function loadData(svg){
+function loadData(){
     d3.csv("fifa_players_15_22.csv").then((data) => {
         console.log("Number of rows: " + data.length);
         let playersPerYear = {};
@@ -57,32 +58,23 @@ function loadData(svg){
         console.log("Number of years: " + Object.keys(playersPerYear).length);
         console.log("Number of players in " + ctx.YEAR + ": " + playersPerYear[ctx.YEAR].length);
         ctx.playersPerYear = playersPerYear;
+        initPlots(ctx.playersPerYear[ctx.YEAR]);
     }).catch((error) => {
         console.log(error);
     });
 }
 
-function populateFootballField(){
-    brush = d3.brush()
-        .extent([
-            [0,0],
-            [600, 900]
-        ])
-        .on("start end", (event) => { // TODO: check if 'brush end' is doable with all changes in plots
-            if (event.selection === null) {
-                console.log("No selection");
-                changeGrassColor(ctx.grassGreen);
-                // TODO: updatePlots(...)
-            } else {
-                console.log("Selection: " + event.selection);
-                changeGrassColor("gray");
-                // TODO: updatePlots(...)
-            }
-        });
-    d3.select("#footballfieldG").call(brush);
+function initPlots(data){
+    initBestPlayerList(data);
 }
 
-function createFootballField(color){
+function updatePlotsOnSelection(data){
+    updateBestPlayerList(data);
+}
+
+//---------------------------------------------------------------------------------------------------------
+
+function initFootballField(){
     let footballfieldG = d3.select("#footballfieldG");
     footballfieldG.attr("transform", "translate(100, 100)");
     ctx.footballFieldScaleX = d3.scaleLinear()
@@ -92,10 +84,8 @@ function createFootballField(color){
         .domain([0, 90])
         .range([0, 900]);
     let footballfield = footballfieldG.append("g").attr("id", "footballfield");
-    drawFootballField(footballfield, color);
-}
-
-function drawFootballField(footballfield, color){
+    let color = ctx.grassGreen;
+    
     footballfield.append("rect")
         .attr("x", 0)
         .attr("y", 0)
@@ -229,6 +219,51 @@ function drawFootballField(footballfield, color){
         .attr("fill", "rgba(0,0,0,0)");
 }
 
+function setupBrush(){
+    brush = d3.brush()
+        .extent([
+            [0,0],
+            [600, 900]
+        ])
+        .on("start end", (event) => { // TODO: check if 'brush end' is doable with all changes in plots
+            if (event.selection === null) {
+                console.log("No selection");
+                changeGrassColor(ctx.grassGreen);
+                // TODO: updatePlotsOnSelection(...)
+            } else {
+                console.log("Selection: " + event.selection);
+                changeGrassColor("gray");
+                // TODO: updatePlotsOnSelection(...)
+            }
+        });
+    d3.select("#footballfieldG").call(brush);
+}
+
 function changeGrassColor(color) {
     d3.selectAll(".grass").attr("fill", color);
 }
+
+//---------------------------------------------------------------------------------------------------------
+
+function initBestPlayerList(playerList){
+    let listGroup = d3.select("#bestPlayerListG");
+    listGroup.attr("transform", "translate(700, 100)");
+    let bestPlayers = playerList.sort((a, b) => b.overall - a.overall).slice(0, 10);
+    listGroup.selectAll("text")
+        .data(bestPlayers)
+        .enter()
+        .append("text")
+        .attr("x", 10)
+        .attr("y", (d, i) => i * 30 + 20)
+        .text(d => d.short_name + " (" + d.overall + ")")
+        .attr("fill", "white")
+        .attr("font-size", "20px")
+        .attr("alignment-baseline", "hanging");
+}
+
+function updateBestPlayerList(playerList){
+    let bestPlayers = playerList.sort((a, b) => b.overall - a.overall).slice(0, 10);
+    d3.select("#bestPlayerListG").selectAll("text").data(bestPlayers).text(d => d.short_name + " (" + d.overall + ")");
+}
+
+//---------------------------------------------------------------------------------------------------------
