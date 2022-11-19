@@ -3,7 +3,8 @@ const ctx = {
     width : 1900,
     height : 1900,
     footballFieldLineWidth : 0.2,
-    backgroundGrey : "#2b2b2b"
+    backgroundGrey : "#2b2b2b",
+    grassGreen : "#338033"
 }
 
 function updateYear(input){
@@ -35,7 +36,8 @@ function createViz(){
         .attr("height", ctx.height)
         .attr("fill", ctx.backgroundGrey);
 
-    createFootballField();
+    createFootballField(ctx.grassGreen);
+    populateFootballField();
     //loadData(svg);
 }
 
@@ -60,7 +62,27 @@ function loadData(svg){
     });
 }
 
-function createFootballField(){
+function populateFootballField(){
+    brush = d3.brush()
+        .extent([
+            [0,0],
+            [600, 900]
+        ])
+        .on("start end", (event) => { // TODO: check if 'brush end' is doable with all changes in plots
+            if (event.selection === null) {
+                console.log("No selection");
+                changeGrassColor(ctx.grassGreen);
+                // TODO: updatePlots(...)
+            } else {
+                console.log("Selection: " + event.selection);
+                changeGrassColor("gray");
+                // TODO: updatePlots(...)
+            }
+        });
+    d3.select("#footballfieldG").call(brush);
+}
+
+function createFootballField(color){
     let footballfieldG = d3.select("#footballfieldG");
     footballfieldG.attr("transform", "translate(100, 100)");
     ctx.footballFieldScaleX = d3.scaleLinear()
@@ -70,7 +92,10 @@ function createFootballField(){
         .domain([0, 90])
         .range([0, 900]);
     let footballfield = footballfieldG.append("g").attr("id", "footballfield");
-    
+    drawFootballField(footballfield, color);
+}
+
+function drawFootballField(footballfield, color){
     footballfield.append("rect")
         .attr("x", 0)
         .attr("y", 0)
@@ -82,7 +107,8 @@ function createFootballField(){
         .attr("y", ctx.footballFieldScaleY(ctx.footballFieldLineWidth))
         .attr("width", ctx.footballFieldScaleX(60 - 2 * ctx.footballFieldLineWidth))
         .attr("height", ctx.footballFieldScaleY(90 - 2 * ctx.footballFieldLineWidth))
-        .attr("fill", "green");
+        .attr("fill", color)
+        .attr("class", "grass");
 
     footballfield.append("circle")
         .attr("cx", ctx.footballFieldScaleX(30))
@@ -98,12 +124,14 @@ function createFootballField(){
         .attr("cx", ctx.footballFieldScaleX(30))
         .attr("cy", ctx.footballFieldScaleY(11))
         .attr("r", ctx.footballFieldScaleX(9.15 - ctx.footballFieldLineWidth))
-        .attr("fill", "green");
+        .attr("fill", color)
+        .attr("class", "grass");
     footballfield.append("circle")
         .attr("cx", ctx.footballFieldScaleX(30))
         .attr("cy", ctx.footballFieldScaleY(79))
         .attr("r", ctx.footballFieldScaleX(9.15 - ctx.footballFieldLineWidth))
-        .attr("fill", "green");
+        .attr("fill", color)
+        .attr("class", "grass");
     
     footballfield.append("rect")
         .attr("x", ctx.footballFieldScaleX((60 - 40.32) / 2))
@@ -116,7 +144,8 @@ function createFootballField(){
         .attr("y", ctx.footballFieldScaleY(ctx.footballFieldLineWidth))
         .attr("width", ctx.footballFieldScaleX(40.32 - 2 * ctx.footballFieldLineWidth))
         .attr("height", ctx.footballFieldScaleY(16.5 - 2 * ctx.footballFieldLineWidth))
-        .attr("fill", "green");
+        .attr("fill", color)
+        .attr("class", "grass");
     footballfield.append("rect")
         .attr("x", ctx.footballFieldScaleX((60 - 40.32) / 2))
         .attr("y", ctx.footballFieldScaleY(90 - 16.5))
@@ -128,7 +157,8 @@ function createFootballField(){
         .attr("y", ctx.footballFieldScaleY(90 - 16.5 + ctx.footballFieldLineWidth))
         .attr("width", ctx.footballFieldScaleX(40.32 - 2 * ctx.footballFieldLineWidth))
         .attr("height", ctx.footballFieldScaleY(16.5 - 2 * ctx.footballFieldLineWidth))
-        .attr("fill", "green");
+        .attr("fill", color)
+        .attr("class", "grass");
 
     footballfield.append("rect")
         .attr("x", ctx.footballFieldScaleX((60 - 18.32) / 2))
@@ -141,7 +171,8 @@ function createFootballField(){
         .attr("y", ctx.footballFieldScaleY(ctx.footballFieldLineWidth))
         .attr("width", ctx.footballFieldScaleX(18.32 - 2 * ctx.footballFieldLineWidth))
         .attr("height", ctx.footballFieldScaleY(5.5 - 2 * ctx.footballFieldLineWidth))
-        .attr("fill", "green");
+        .attr("fill", color)
+        .attr("class", "grass");
     footballfield.append("rect")
         .attr("x", ctx.footballFieldScaleX((60 - 18.32) / 2))
         .attr("y", ctx.footballFieldScaleY(90 - 5.5))
@@ -153,7 +184,8 @@ function createFootballField(){
         .attr("y", ctx.footballFieldScaleY(90 - 5.5 + ctx.footballFieldLineWidth))
         .attr("width", ctx.footballFieldScaleX(18.32 - 2 * ctx.footballFieldLineWidth))
         .attr("height", ctx.footballFieldScaleY(5.5 - 2 * ctx.footballFieldLineWidth))
-        .attr("fill", "green");
+        .attr("fill", color)
+        .attr("class", "grass");
     
     footballfield.append("circle")
         .attr("cx", ctx.footballFieldScaleX(30))
@@ -175,7 +207,8 @@ function createFootballField(){
         .attr("cx", ctx.footballFieldScaleX(60 / 2))
         .attr("cy", ctx.footballFieldScaleY(90 / 2))
         .attr("r", ctx.footballFieldScaleX(9.15 - ctx.footballFieldLineWidth))
-        .attr("fill", "green");
+        .attr("fill", color)
+        .attr("class", "grass");
     footballfield.append("circle")
         .attr("cx", ctx.footballFieldScaleX(60 / 2))
         .attr("cy", ctx.footballFieldScaleY(90 / 2))
@@ -187,4 +220,15 @@ function createFootballField(){
         .attr("width", ctx.footballFieldScaleX(60))
         .attr("height", ctx.footballFieldScaleY(ctx.footballFieldLineWidth))
         .attr("fill", "white");
+    
+    footballfield.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", ctx.footballFieldScaleX(60))
+        .attr("height", ctx.footballFieldScaleY(90))
+        .attr("fill", "rgba(0,0,0,0)");
+}
+
+function changeGrassColor(color) {
+    d3.selectAll(".grass").attr("fill", color);
 }
