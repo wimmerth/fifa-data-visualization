@@ -217,6 +217,8 @@ function initFootballField(){
         .attr("width", ctx.footballFieldScaleX(60))
         .attr("height", ctx.footballFieldScaleY(90))
         .attr("fill", "rgba(0,0,0,0)");
+
+    setupBrush();
 }
 
 function setupBrush(){
@@ -247,23 +249,52 @@ function changeGrassColor(color) {
 
 function initBestPlayerList(playerList){
     let listGroup = d3.select("#bestPlayerListG");
-    listGroup.attr("transform", "translate(700, 100)");
+    listGroup.attr("transform", "translate(705, 100)");
     let bestPlayers = playerList.sort((a, b) => b.overall - a.overall).slice(0, 10);
-    listGroup.selectAll("text")
+    // show best players in button list next in the listGroup
+    let bestPlayerButtons = listGroup.selectAll("g")
         .data(bestPlayers)
-        .enter()
-        .append("text")
+        .join("g")
+        .attr("transform", (d, i) => "translate(0, " + i * 40 + ")");
+    bestPlayerButtons.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", 300)
+        .attr("height", 40)
+        .attr("fill", "#004e82")
+        .attr("stroke", "white")
+        .attr("stroke-width", 1);
+    bestPlayerButtons.append("text")
         .attr("x", 10)
-        .attr("y", (d, i) => i * 30 + 20)
-        .text(d => d.short_name + " (" + d.overall + ")")
+        .attr("y", 30)
+        .attr("font-size", 20)
         .attr("fill", "white")
-        .attr("font-size", "20px")
-        .attr("alignment-baseline", "hanging");
+        .attr("class", "playerName")
+        .text(d => d.short_name);
+    bestPlayerButtons.append("text")
+        .attr("x", 200)
+        .attr("y", 30)
+        .attr("font-size", 20)
+        .attr("fill", "white")
+        .attr("class", "playerOverall")
+        .text(d => d.overall);
+    bestPlayerButtons.append("image")
+        .attr("xlink:href", d => d.player_face_url)
+        .attr("x", 250)
+        .attr("y", 1)
+        .attr("width", 38)
+        .attr("height", 38);
+    bestPlayerButtons.on("click", (event, d) => {
+        console.log("Clicked on " + d.short_name);
+    });
 }
 
 function updateBestPlayerList(playerList){
     let bestPlayers = playerList.sort((a, b) => b.overall - a.overall).slice(0, 10);
-    d3.select("#bestPlayerListG").selectAll("text").data(bestPlayers).text(d => d.short_name + " (" + d.overall + ")");
+    bestPlayerButtons = d3.select("#bestPlayerListG").selectAll("g").data(bestPlayers);
+    bestPlayerButtons.select(".playerName").text(d => d.short_name);
+    bestPlayerButtons.select(".playerOverall").text(d => d.overall);
+    bestPlayerButtons.select("image").attr("xlink:href", d => d.player_face_url);
 }
 
 //---------------------------------------------------------------------------------------------------------
