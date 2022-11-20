@@ -7,12 +7,14 @@ const ctx = {
     grassGreen : "#338033"
 }
 
+
+
 function updateYear(input){
     if (ctx.YEAR + input >= 2015 && ctx.YEAR + input <= 2022){
         ctx.YEAR = ctx.YEAR + input;
         d3.select("#yearLabel").text(ctx.YEAR);
         console.log("Number of players in " + ctx.YEAR + ": " + ctx.playersPerYear[ctx.YEAR].length);
-        updatePlotsOnSelection(ctx.playersPerYear[ctx.YEAR]);
+        updatePlotsOnSelection(ctx.playersPerYear[ctx.YEAR],[]);
     } else {
         console.log("Year out of range");
     }
@@ -62,14 +64,48 @@ function loadData(){
     }).catch((error) => {
         console.log(error);
     });
+
+    d3.csv("player_positions.csv").then((d) => {
+        let playerPositions = {};
+        for (let i = 0; i < (d.length); i++){
+            let row = d[i];
+            playerPositions[i] = row;
+        }
+        console.log("Players positions loaded");
+        ctx.playerPositions = playerPositions;
+    }).catch((error) => {
+        console.log(error);
+    });
+
 }
 
 function initPlots(data){
     initBestPlayerList(data);
 }
 
-function updatePlotsOnSelection(data){
-    updateBestPlayerList(data);
+function updatePlotsOnSelection(data,selection){
+    let playerPositions = findPlayerPositions(selection);
+    updateBestPlayerList(data,playerPositions);
+}
+
+function findPlayerPositions(selection){
+    playerPositionScaleX = d3.scaleLinear()
+        .domain([0, 600])
+        .range([0, 60]);
+    playerPositionScaleY = d3.scaleLinear()
+        .domain([0, 900])
+        .range([0, 90]);
+
+    x1 = Math.floor(playerPositionScaleX(selection[0][0]));
+    y1 = Math.floor(playerPositionScaleY(selection[0][1]));
+    x2 = Math.floor(playerPositionScaleX(selection[1][0]));
+    y2 = Math.floor(playerPositionScaleY(selection[1][1]));
+
+    selectedPositions = [ctx.playerPositions[y1][x1],
+                        ctx.playerPositions[y2][x1],
+                        ctx.playerPositions[y1][x2],
+                        ctx.playerPositions[y2][x2]];
+    return selectedPositions;
 }
 
 //---------------------------------------------------------------------------------------------------------
@@ -236,6 +272,7 @@ function setupBrush(){
                 console.log("Selection: " + event.selection);
                 changeGrassColor("gray");
                 // TODO: updatePlotsOnSelection(...)
+                updatePlotsOnSelection(ctx.playersPerYear[ctx.YEAR],event.selection);
             }
         });
     d3.select("#footballfieldG").call(brush);
@@ -289,8 +326,21 @@ function initBestPlayerList(playerList){
     });
 }
 
-function updateBestPlayerList(playerList){
-    let bestPlayers = playerList.sort((a, b) => b.overall - a.overall).slice(0, 10);
+function updateBestPlayerList(playerList,selectedPositions){
+    if(selectedPositions.length > 0){
+        let playersForPosition = playerList.filter((player) => {
+            return player.player_positions.split(',').some(position => selectedPositions.includes(position.toLowerCase()));
+        });
+        let bestPlayers = playersForPosition.sort((a, b) => b.overall - a.overall).slice(0, 10);
+        displayBestPlayerList(bestPlayers);
+    }
+    else{
+        let bestPlayers = playerList.sort((a, b) => b.overall - a.overall).slice(0, 10);
+        displayBestPlayerList(bestPlayers);
+    }
+}
+
+function displayBestPlayerList(bestPlayers){
     bestPlayerButtons = d3.select("#bestPlayerListG").selectAll("g").data(bestPlayers);
     bestPlayerButtons.select(".playerName").text(d => d.short_name);
     bestPlayerButtons.select(".playerOverall").text(d => d.overall);
