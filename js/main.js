@@ -7,14 +7,12 @@ const ctx = {
     grassGreen : "#338033"
 }
 
-
-
 function updateYear(input){
     if (ctx.YEAR + input >= 2015 && ctx.YEAR + input <= 2022){
         ctx.YEAR = ctx.YEAR + input;
         d3.select("#yearLabel").text(ctx.YEAR);
         console.log("Number of players in " + ctx.YEAR + ": " + ctx.playersPerYear[ctx.YEAR].length);
-        updatePlotsOnSelection(ctx.playersPerYear[ctx.YEAR],[]);
+        updatePlotsOnSelection(ctx.YEAR, ctx.SELECTION);
     } else {
         console.log("Year out of range");
     }
@@ -68,44 +66,47 @@ function loadData(){
     d3.csv("player_positions.csv").then((d) => {
         let playerPositions = {};
         for (let i = 0; i < (d.length); i++){
-            let row = d[i];
-            playerPositions[i] = row;
+            playerPositions[d[i].pos] = [d[i].x_min, d[i].x_max, d[i].y_min, d[i].y_max];
         }
         console.log("Players positions loaded");
         ctx.playerPositions = playerPositions;
+        console.log(ctx.playerPositions);
     }).catch((error) => {
         console.log(error);
     });
-
 }
 
 function initPlots(data){
     initBestPlayerList(data);
 }
 
-function updatePlotsOnSelection(data,selection){
+function updatePlotsOnSelection(year, selection){
     let playerPositions = findPlayerPositions(selection);
-    updateBestPlayerList(data,playerPositions);
+    data = ctx.playersPerYear[year].filter(d => playerPositions.includes(d.club_position));
+    updateBestPlayerList(data);
 }
 
 function findPlayerPositions(selection){
-    playerPositionScaleX = d3.scaleLinear()
-        .domain([0, 600])
-        .range([0, 60]);
-    playerPositionScaleY = d3.scaleLinear()
-        .domain([0, 900])
-        .range([0, 90]);
-
-    x1 = Math.floor(playerPositionScaleX(selection[0][0]));
-    y1 = Math.floor(playerPositionScaleY(selection[0][1]));
-    x2 = Math.floor(playerPositionScaleX(selection[1][0]));
-    y2 = Math.floor(playerPositionScaleY(selection[1][1]));
-
-    selectedPositions = [ctx.playerPositions[y1][x1],
-                        ctx.playerPositions[y2][x1],
-                        ctx.playerPositions[y1][x2],
-                        ctx.playerPositions[y2][x2]];
-    return selectedPositions;
+    if (selection === null){
+        console.log(Object.keys(ctx.playerPositions));
+        return Object.keys(ctx.playerPositions);
+    } else {
+        let x_min = ctx.footballFieldInverseScaleX(selection[0][0]);
+        let x_max = ctx.footballFieldInverseScaleX(selection[1][0]);
+        let y_min = ctx.footballFieldInverseScaleY(selection[0][1]);
+        let y_max = ctx.footballFieldInverseScaleY(selection[1][1]);
+        console.log("x_min: " + x_min + ", x_max: " + x_max + ", y_min: " + y_min + ", y_max: " + y_max);
+        let selectedPositions = [];
+        for (let position in ctx.playerPositions){
+            let pos = ctx.playerPositions[position];
+            // select position if there is an overlap between the selection and the position
+            if (x_min < pos[1] && x_max > pos[0] && y_min < pos[3] && y_max > pos[2]){
+                selectedPositions.push(position);
+            }
+        }
+        console.log(selectedPositions);
+        return selectedPositions;
+    }
 }
 
 //---------------------------------------------------------------------------------------------------------
@@ -119,6 +120,12 @@ function initFootballField(){
     ctx.footballFieldScaleY = d3.scaleLinear()
         .domain([0, 90])
         .range([0, 900]);
+    ctx.footballFieldInverseScaleX = d3.scaleLinear()
+        .domain([0, 600])
+        .range([0, 60]);
+    ctx.footballFieldInverseScaleY = d3.scaleLinear()
+        .domain([0, 900])
+        .range([0, 90]);
     let footballfield = footballfieldG.append("g").attr("id", "footballfield");
     let color = ctx.grassGreen;
     
@@ -263,17 +270,16 @@ function setupBrush(){
             [0,0],
             [600, 900]
         ])
-        .on("start end", (event) => { // TODO: check if 'brush end' is doable with all changes in plots
+        .on("brush end", (event) => { // TODO: check if 'brush end' is doable with all changes in plots
             if (event.selection === null) {
                 console.log("No selection");
                 changeGrassColor(ctx.grassGreen);
-                // TODO: updatePlotsOnSelection(...)
             } else {
                 console.log("Selection: " + event.selection);
                 changeGrassColor("gray");
-                // TODO: updatePlotsOnSelection(...)
-                updatePlotsOnSelection(ctx.playersPerYear[ctx.YEAR],event.selection);
             }
+            ctx.SELECTION = event.selection;
+            updatePlotsOnSelection(ctx.YEAR, ctx.SELECTION);
         });
     d3.select("#footballfieldG").call(brush);
 }
@@ -326,22 +332,19 @@ function initBestPlayerList(playerList){
     });
 }
 
-function updateBestPlayerList(playerList,selectedPositions){
-    if(selectedPositions.length > 0){
-        let playersForPosition = playerList.filter((player) => {
-            return player.player_positions.split(',').some(position => selectedPositions.includes(position.toLowerCase()));
-        });
-        let bestPlayers = playersForPosition.sort((a, b) => b.overall - a.overall).slice(0, 10);
-        displayBestPlayerList(bestPlayers);
-    }
-    else{
-        let bestPlayers = playerList.sort((a, b) => b.overall - a.overall).slice(0, 10);
-        displayBestPlayerList(bestPlayers);
-    }
-}
-
-function displayBestPlayerList(bestPlayers){
-    bestPlayerButtons = d3.select("#bestPlayerListG").selectAll("g").data(bestPlayers);
+function updateBestPlayerList(playerList){
+    let bestPlayers = playerList.sort((a, b) => b.overall - a.overall).slice(0, 10);
+    bestPlayerButtons = d3.select("#bestPlayerListG").selectAll("g").data(bestPlayers).join(
+        enter => console.log("enter"),
+        update => {
+            update.style("visibility", "visible");
+            return update
+        },
+        exit => {
+            console.log("exit");
+            exit.style("visibility", "hidden");
+        }
+    );
     bestPlayerButtons.select(".playerName").text(d => d.short_name);
     bestPlayerButtons.select(".playerOverall").text(d => d.overall);
     bestPlayerButtons.select("image").attr("xlink:href", d => d.player_face_url);
