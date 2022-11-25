@@ -78,12 +78,14 @@ function loadData(){
 
 function initPlots(data){
     initBestPlayerList(data);
+    statsRadar(data);
 }
 
 function updatePlotsOnSelection(year, selection){
     let playerPositions = findPlayerPositions(selection);
     data = ctx.playersPerYear[year].filter(d => playerPositions.includes(d.club_position));
     updateBestPlayerList(data);
+    statsRadar(data);
 }
 
 function findPlayerPositions(selection){
@@ -351,3 +353,130 @@ function updateBestPlayerList(playerList){
 }
 
 //---------------------------------------------------------------------------------------------------------
+//---------------------------------------------STATS RADAR-------------------------------------------------
+
+function findAxis(playerList){
+    let bestPlayers = playerList.sort((a, b) => b.overall - a.overall).slice(0, 10);
+    let features = ["pace","shooting","passing","dribbling","defending","physic"];
+    let allAxis = new Array();
+    let length = bestPlayers.length;
+
+    for (let player in bestPlayers){
+        if(allAxis.length == 0)
+            for (let feature in features){
+                allAxis.push({axis:features[feature],value:parseFloat(bestPlayers[player][features[feature]])});
+            }
+        else{
+            for (let feature in features){
+                if(bestPlayers[player][features[feature]] == ""){
+                    length -= 1;
+                    break;
+                }
+                allAxis.forEach((element) => {
+                    if(element.axis == features[feature]){
+                        newValue = parseFloat(bestPlayers[player][features[feature]]);
+                        element.value += newValue;
+                    }
+                });
+            }
+        }
+    }
+    allAxis.forEach((element) => {element.value = (element.value/length).toFixed(2);});
+
+    console.log(allAxis);
+    return allAxis;
+}
+
+function statsRadar(playerList){
+    let cfg = {
+        w: 300,				//width of the circle
+        h: 300,				//height of the circle
+        levels: 3,				//levels of inner circles
+        maxValue: 100, 			//value that the biggest circle will represent
+        labelFactor: 1.25, 	//distance between outer circle and label
+        wrapWidth: 60, 		//number of pixels after which a label needs to be given a new line
+        opacityArea: 0.35, 	//opacity of the area of the blob
+        dotRadius: 4, 			//size of the colored circles of each blog
+        opacityCircles: 0.1, 	//opacity of the circles of each blob
+        strokeWidth: 2, 		//width of the stroke around each blob
+        color: d3.scaleOrdinal(d3.schemeCategory10)
+    };
+
+    let allAxis = findAxis(playerList);
+    let axisNames = (allAxis.map(function(i, j){return i.axis}));	//names of each axis
+    let total = allAxis.length;					//total number of different axes
+    let radius = Math.min(cfg.w/2, cfg.h/2); 	//radius of the outermost circle
+    let Format = d3.format('%');
+    let angleSlice = Math.PI * 2 / total;		//width in radians of each "slice"
+
+    //Scale for the radius
+    let radiusScale = d3.scaleLinear()
+        .range([0, radius])
+        .domain([0, 100]);
+
+    let statsRadar = d3.select("#statsG");
+    statsRadar.attr("transform", "translate(900, 700)");
+    
+    //Filter for the outside glow
+    let filter = statsRadar.append('defs').append('filter').attr('id','glow');
+    let feGaussianBlur = filter.append('feGaussianBlur').attr('stdDeviation','2.5').attr('result','coloredBlur');
+    let feMerge = filter.append('feMerge');
+    let feMergeNode_1 = feMerge.append('feMergeNode').attr('in','coloredBlur');
+    let feMergeNode_2 = feMerge.append('feMergeNode').attr('in','SourceGraphic');
+    
+    // Draw the Circular grid
+    //Wrapper for the grid & axes
+    let axisGrid = statsRadar.append("g").attr("class", "axisWrapper");
+    
+    //Draw the background circles
+    axisGrid.selectAll(".levels")
+        .data(d3.range(1,(cfg.levels+1)).reverse())
+        .enter()
+        .append("circle")
+        .attr("class", "gridCircle")
+        .attr("r", function(d, i){return radius/cfg.levels*d;})
+        .style("fill", "#CDCDCD")
+        .style("stroke", "#CDCDCD")
+        .style("fill-opacity", cfg.opacityCircles)
+        .style("filter" , "url(#glow)");
+
+    //Text indicating at what % each level is
+	axisGrid.selectAll(".axisLabel")
+        .data(d3.range(1,(cfg.levels+1)).reverse())
+        .enter().append("text")
+        .attr("class", "axisLabel")
+        .attr("x", 4)
+        .attr("y", function(d){return -d*radius/cfg.levels;})
+        .attr("dy", "0.4em")
+        .style("font-size", "10px")
+        .attr("fill", "#FFFFFF")
+        .text(function(d,i) { return (cfg.maxValue * d/cfg.levels).toFixed(0); });
+
+    // Draw the axes
+    //Create the straight lines radiating outward from the center
+    let axis = axisGrid.selectAll(".axis")
+        .data(axisNames)
+        .enter()
+        .append("g")
+        .attr("class", "axis");
+    //Append the lines
+    axis.append("line")
+        .attr("x1", 0)
+        .attr("y1", 0)
+        .attr("x2", function(d, i){ return radiusScale(cfg.maxValue*1.1) * Math.cos(angleSlice*i - Math.PI/2); })
+        .attr("y2", function(d, i){ return radiusScale(cfg.maxValue*1.1) * Math.sin(angleSlice*i - Math.PI/2); })
+        .attr("class", "line")
+        .style("stroke", "white")
+        .style("stroke-width", "2px");
+    //Append the labels at each axis
+	axis.append("text")
+        .attr("class", "legend")
+        .style("font-size", "11px")
+        .attr("text-anchor", "middle")
+        .attr("fill", "#FFFFFF")
+        .attr("dy", "0.35em")
+        .attr("x", function(d, i){ return radiusScale(cfg.maxValue * cfg.labelFactor) * Math.cos(angleSlice*i - Math.PI/2); })
+        .attr("y", function(d, i){ return radiusScale(cfg.maxValue * cfg.labelFactor) * Math.sin(angleSlice*i - Math.PI/2); })
+        .text(function(d){return d});
+    
+}
