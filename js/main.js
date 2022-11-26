@@ -388,6 +388,8 @@ function findAxis(playerList){
 }
 
 function statsRadar(playerList){
+    document.getElementById("statsG").innerHTML = '';
+
     let cfg = {
         w: 300,				//width of the circle
         h: 300,				//height of the circle
@@ -402,14 +404,15 @@ function statsRadar(playerList){
         color: d3.scaleOrdinal(d3.schemeCategory10)
     };
 
-    let allAxis = findAxis(playerList);
-    let axisNames = (allAxis.map(function(i, j){return i.axis}));	//names of each axis
-    let total = allAxis.length;					//total number of different axes
+    let allAxis = [findAxis(playerList)];
+    let axisNames = (allAxis[0].map(function(i, j){return i.axis}));	//names of each axis
+    let total = axisNames.length;					//total number of different axes
     let radius = Math.min(cfg.w/2, cfg.h/2); 	//radius of the outermost circle
     let Format = d3.format('%');
     let angleSlice = Math.PI * 2 / total;		//width in radians of each "slice"
-
-    //Scale for the radius
+    console.log(allAxis);
+    
+    //radius scale
     let radiusScale = d3.scaleLinear()
         .range([0, radius])
         .domain([0, 100]);
@@ -417,18 +420,18 @@ function statsRadar(playerList){
     let statsRadar = d3.select("#statsG");
     statsRadar.attr("transform", "translate(900, 700)");
     
-    //Filter for the outside glow
+    //outside glow filter
     let filter = statsRadar.append('defs').append('filter').attr('id','glow');
     let feGaussianBlur = filter.append('feGaussianBlur').attr('stdDeviation','2.5').attr('result','coloredBlur');
     let feMerge = filter.append('feMerge');
     let feMergeNode_1 = feMerge.append('feMergeNode').attr('in','coloredBlur');
     let feMergeNode_2 = feMerge.append('feMergeNode').attr('in','SourceGraphic');
     
-    // Draw the Circular grid
-    //Wrapper for the grid & axes
+    // circular grid
+    //wrapper for the grid & axes
     let axisGrid = statsRadar.append("g").attr("class", "axisWrapper");
     
-    //Draw the background circles
+    //draw the background circles
     axisGrid.selectAll(".levels")
         .data(d3.range(1,(cfg.levels+1)).reverse())
         .enter()
@@ -440,7 +443,7 @@ function statsRadar(playerList){
         .style("fill-opacity", cfg.opacityCircles)
         .style("filter" , "url(#glow)");
 
-    //Text indicating at what % each level is
+    //show percentage of each level
 	axisGrid.selectAll(".axisLabel")
         .data(d3.range(1,(cfg.levels+1)).reverse())
         .enter().append("text")
@@ -452,14 +455,14 @@ function statsRadar(playerList){
         .attr("fill", "#FFFFFF")
         .text(function(d,i) { return (cfg.maxValue * d/cfg.levels).toFixed(0); });
 
-    // Draw the axes
-    //Create the straight lines radiating outward from the center
+    //straight line axes radiating outward from the center
     let axis = axisGrid.selectAll(".axis")
         .data(axisNames)
         .enter()
         .append("g")
         .attr("class", "axis");
-    //Append the lines
+    
+    //append axes
     axis.append("line")
         .attr("x1", 0)
         .attr("y1", 0)
@@ -468,7 +471,8 @@ function statsRadar(playerList){
         .attr("class", "line")
         .style("stroke", "white")
         .style("stroke-width", "2px");
-    //Append the labels at each axis
+
+    //append the labels of each axis
 	axis.append("text")
         .attr("class", "legend")
         .style("font-size", "11px")
@@ -479,4 +483,99 @@ function statsRadar(playerList){
         .attr("y", function(d, i){ return radiusScale(cfg.maxValue * cfg.labelFactor) * Math.sin(angleSlice*i - Math.PI/2); })
         .text(function(d){return d});
     
+    // radar chart blobs
+	// radial line function
+	var radarLine = d3.lineRadial()
+        .radius(function(d) { return radiusScale(d.value); })
+        .angle(function(d,i) {	return i*angleSlice; });
+    
+    if(cfg.roundStrokes) {
+        radarLine.interpolate("cardinal-closed");
+    }
+                
+    //wrapper for the blobs	
+    var blobWrapper = statsRadar.selectAll(".radarWrapper")
+        .data(allAxis)
+        .enter().append("g")
+        .attr("class", "radarWrapper");
+            
+    //append backgrounds	
+    blobWrapper.append("path")
+        .attr("class", "radarArea")
+        .attr("d", function(d,i) { return radarLine(d); })
+        .style("fill", function(d,i) { return cfg.color(i); })
+        .style("fill-opacity", cfg.opacityArea)
+        .on('mouseover', function (d,i){
+            //Dim all blobs
+            d3.selectAll(".radarArea")
+                .transition().duration(200)
+                .style("fill-opacity", 0.1); 
+            //Bring back the hovered over blob
+            d3.select(this)
+                .transition().duration(200)
+                .style("fill-opacity", 0.7);	
+        })
+        .on('mouseout', function(){
+            //Bring back all blobs
+            d3.selectAll(".radarArea")
+                .transition().duration(200)
+                .style("fill-opacity", cfg.opacityArea);
+        });
+
+    //outlines	
+	blobWrapper.append("path")
+        .attr("class", "radarStroke")
+        .attr("d", function(d,i) { return radarLine(d); })
+        .style("stroke-width", cfg.strokeWidth + "px")
+        .style("stroke", function(d,i) { return cfg.color(i); })
+        .style("fill", "none")
+        .style("filter" , "url(#glow)");		
+
+    //append the circles
+    blobWrapper.selectAll(".radarCircle")
+        .data(function(d,i) { return d; })
+        .enter().append("circle")
+        .attr("class", "radarCircle")
+        .attr("r", cfg.dotRadius)
+        .attr("cx", function(d,i){ return radiusScale(d.value) * Math.cos(angleSlice*i - Math.PI/2); })
+        .attr("cy", function(d,i){ return radiusScale(d.value) * Math.sin(angleSlice*i - Math.PI/2); })
+        .style("fill", function(d,i,j) { return cfg.color(j); })
+        .style("fill-opacity", 0.8);
+
+    //invisible circles for tooltip
+    var blobCircleWrapper = statsRadar.selectAll(".radarCircleWrapper")
+        .data(allAxis)
+        .enter().append("g")
+        .attr("class", "radarCircleWrapper");
+        
+    //invisible circles on top for the mouseover pop-up
+    blobCircleWrapper.selectAll(".radarInvisibleCircle")
+        .data(function(d,i) { return d; })
+        .enter().append("circle")
+        .attr("class", "radarInvisibleCircle")
+        .attr("r", cfg.dotRadius*1.5)
+        .attr("cx", function(d,i){ return radiusScale(d.value) * Math.cos(angleSlice*i - Math.PI/2); })
+        .attr("cy", function(d,i){ return radiusScale(d.value) * Math.sin(angleSlice*i - Math.PI/2); })
+        .style("fill", "none")
+        .style("pointer-events", "all")
+        .on("mouseover", function(d,i) {
+            newX =  parseFloat(d3.select(this).attr('cx')) - 10;
+            newY =  parseFloat(d3.select(this).attr('cy')) - 10;
+                    
+            tooltip
+                .attr('x', newX)
+                .attr('y', newY)
+                .text(Format(d.value))
+                .transition().duration(200)
+                .style('opacity', 1);
+        })
+        .on("mouseout", function(){
+            tooltip.transition().duration(200)
+                .style("opacity", 0);
+        });
+        
+    //tooltip for when you hover over a circle
+    var tooltip = axisGrid.append("text")
+        .attr("class", "tooltip")
+        .style("opacity", 0);
 }
