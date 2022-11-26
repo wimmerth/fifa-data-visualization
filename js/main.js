@@ -4,7 +4,8 @@ const ctx = {
     height : 1900,
     footballFieldLineWidth : 0.2,
     backgroundGrey : "#2b2b2b",
-    grassGreen : "#338033"
+    grassGreen : "#338033",
+    SELECTION : null,
 }
 
 function updateYear(input){
@@ -382,9 +383,31 @@ function findAxis(playerList){
         }
     }
     allAxis.forEach((element) => {element.value = (element.value/length).toFixed(2);});
-
     console.log(allAxis);
     return allAxis;
+}
+
+function summaryStats(playerList){
+    // compute median, 25th and 75th percentile, min and max for each relevant feature
+    let features = ["pace","shooting","passing","dribbling","defending","physic"];
+    // filter for top 100 players
+    playerList = playerList.sort((a, b) => b.overall - a.overall).slice(0, 100);
+    let statsList = ["median", "min", "max", "q1", "q3"]
+    let stats = {};
+    for (let stat of statsList) {
+        stats[stat] = new Array();
+    }
+    for (let feature of features) {
+        let values = playerList.map(d => parseFloat(d[feature]));
+        values.sort((a, b) => a - b);
+        stats["median"].push({axis: feature, value: d3.median(values)});
+        stats["min"].push({axis: feature, value: d3.min(values)});
+        stats["max"].push({axis: feature, value: d3.max(values)});
+        stats["q1"].push({axis: feature, value: d3.quantile(values, 0.25)});
+        stats["q3"].push({axis: feature, value: d3.quantile(values, 0.75)});
+    }
+    stats = Object.values(stats)
+    return stats;
 }
 
 function statsRadar(playerList){
@@ -401,16 +424,16 @@ function statsRadar(playerList){
         dotRadius: 4, 			//size of the colored circles of each blog
         opacityCircles: 0.1, 	//opacity of the circles of each blob
         strokeWidth: 2, 		//width of the stroke around each blob
-        color: d3.scaleOrdinal(d3.schemeCategory10)
+        color: d3.scaleOrdinal(d3.schemeCategory10),
+        roundStrokes: false
     };
 
-    let allAxis = [findAxis(playerList)];
+    // let allAxis = [findAxis(playerList)];
+    let allAxis = summaryStats(playerList);
     let axisNames = (allAxis[0].map(function(i, j){return i.axis}));	//names of each axis
     let total = axisNames.length;					//total number of different axes
     let radius = Math.min(cfg.w/2, cfg.h/2); 	//radius of the outermost circle
-    let Format = d3.format('%');
     let angleSlice = Math.PI * 2 / total;		//width in radians of each "slice"
-    console.log(allAxis);
     
     //radius scale
     let radiusScale = d3.scaleLinear()
@@ -419,13 +442,6 @@ function statsRadar(playerList){
 
     let statsRadar = d3.select("#statsG");
     statsRadar.attr("transform", "translate(900, 700)");
-    
-    //outside glow filter
-    let filter = statsRadar.append('defs').append('filter').attr('id','glow');
-    let feGaussianBlur = filter.append('feGaussianBlur').attr('stdDeviation','2.5').attr('result','coloredBlur');
-    let feMerge = filter.append('feMerge');
-    let feMergeNode_1 = feMerge.append('feMergeNode').attr('in','coloredBlur');
-    let feMergeNode_2 = feMerge.append('feMergeNode').attr('in','SourceGraphic');
     
     // circular grid
     //wrapper for the grid & axes
@@ -481,7 +497,7 @@ function statsRadar(playerList){
         .attr("dy", "0.35em")
         .attr("x", function(d, i){ return radiusScale(cfg.maxValue * cfg.labelFactor) * Math.cos(angleSlice*i - Math.PI/2); })
         .attr("y", function(d, i){ return radiusScale(cfg.maxValue * cfg.labelFactor) * Math.sin(angleSlice*i - Math.PI/2); })
-        .text(function(d){return d});
+        .text(string => {return string.charAt(0).toUpperCase() + string.slice(1)});
     
     // radar chart blobs
 	// radial line function
@@ -529,8 +545,8 @@ function statsRadar(playerList){
         .style("stroke-width", cfg.strokeWidth + "px")
         .style("stroke", function(d,i) { return cfg.color(i); })
         .style("fill", "none")
-        .style("filter" , "url(#glow)");		
-
+        .style("filter" , "url(#glow)");
+    
     //append the circles
     blobWrapper.selectAll(".radarCircle")
         .data(function(d,i) { return d; })
@@ -541,7 +557,7 @@ function statsRadar(playerList){
         .attr("cy", function(d,i){ return radiusScale(d.value) * Math.sin(angleSlice*i - Math.PI/2); })
         .style("fill", function(d,i,j) { return cfg.color(j); })
         .style("fill-opacity", 0.8);
-
+    /*
     //invisible circles for tooltip
     var blobCircleWrapper = statsRadar.selectAll(".radarCircleWrapper")
         .data(allAxis)
@@ -578,4 +594,5 @@ function statsRadar(playerList){
     var tooltip = axisGrid.append("text")
         .attr("class", "tooltip")
         .style("opacity", 0);
+        */
 }
