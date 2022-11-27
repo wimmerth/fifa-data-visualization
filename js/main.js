@@ -356,37 +356,6 @@ function updateBestPlayerList(playerList){
 //---------------------------------------------------------------------------------------------------------
 //---------------------------------------------STATS RADAR-------------------------------------------------
 
-function findAxis(playerList){
-    let bestPlayers = playerList.sort((a, b) => b.overall - a.overall).slice(0, 10);
-    let features = ["pace","shooting","passing","dribbling","defending","physic"];
-    let allAxis = new Array();
-    let length = bestPlayers.length;
-
-    for (let player in bestPlayers){
-        if(allAxis.length == 0)
-            for (let feature in features){
-                allAxis.push({axis:features[feature],value:parseFloat(bestPlayers[player][features[feature]])});
-            }
-        else{
-            for (let feature in features){
-                if(bestPlayers[player][features[feature]] == ""){
-                    length -= 1;
-                    break;
-                }
-                allAxis.forEach((element) => {
-                    if(element.axis == features[feature]){
-                        newValue = parseFloat(bestPlayers[player][features[feature]]);
-                        element.value += newValue;
-                    }
-                });
-            }
-        }
-    }
-    allAxis.forEach((element) => {element.value = (element.value/length).toFixed(2);});
-    console.log(allAxis);
-    return allAxis;
-}
-
 function summaryStats(playerList){
     // compute median, 25th and 75th percentile, min and max for each relevant feature
     let features = ["pace","shooting","passing","dribbling","defending","physic"];
