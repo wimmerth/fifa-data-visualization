@@ -391,8 +391,8 @@ function summaryStats(playerList){
     // compute median, 25th and 75th percentile, min and max for each relevant feature
     let features = ["pace","shooting","passing","dribbling","defending","physic"];
     // filter for top 100 players
-    playerList = playerList.sort((a, b) => b.overall - a.overall).slice(0, 100);
-    let statsList = ["median", "min", "max", "q1", "q3"]
+    playerList = playerList.sort((a, b) => b.overall - a.overall).slice(0, 50);
+    let statsList = ["max", "q3", "median", "q1", "min"];
     let stats = {};
     for (let stat of statsList) {
         stats[stat] = new Array();
@@ -406,8 +406,12 @@ function summaryStats(playerList){
         stats["q1"].push({axis: feature, value: d3.quantile(values, 0.25)});
         stats["q3"].push({axis: feature, value: d3.quantile(values, 0.75)});
     }
-    stats = Object.values(stats)
-    return stats;
+    // stats = Object.values(stats)
+    let orderedStats = new Array();
+    for (let stat of statsList) {
+        orderedStats.push({"name": stat, "values": stats[stat]});
+    }
+    return orderedStats;
 }
 
 function statsRadar(playerList){
@@ -424,13 +428,14 @@ function statsRadar(playerList){
         dotRadius: 4, 			//size of the colored circles of each blog
         opacityCircles: 0.1, 	//opacity of the circles of each blob
         strokeWidth: 2, 		//width of the stroke around each blob
-        color: d3.scaleOrdinal(d3.schemeCategory10),
-        roundStrokes: false
+        // color: d3.scaleOrdinal(d3.schemeCategory10),
+        color: (d) => "lightblue",
+        roundStrokes: true
     };
 
     // let allAxis = [findAxis(playerList)];
     let allAxis = summaryStats(playerList);
-    let axisNames = (allAxis[0].map(function(i, j){return i.axis}));	//names of each axis
+    let axisNames = (allAxis[0]["values"].map(function(i, j){return i.axis}));	//names of each axis
     let total = axisNames.length;					//total number of different axes
     let radius = Math.min(cfg.w/2, cfg.h/2); 	//radius of the outermost circle
     let angleSlice = Math.PI * 2 / total;		//width in radians of each "slice"
@@ -506,7 +511,7 @@ function statsRadar(playerList){
         .angle(function(d,i) {	return i*angleSlice; });
     
     if(cfg.roundStrokes) {
-        radarLine.interpolate("cardinal-closed");
+        radarLine.curve(d3.curveLinearClosed);
     }
                 
     //wrapper for the blobs	
@@ -514,12 +519,42 @@ function statsRadar(playerList){
         .data(allAxis)
         .enter().append("g")
         .attr("class", "radarWrapper");
-            
+           
+    // create a tooltip
+    /*
+    var Tooltip = statsRadar
+        .append("div")
+        .style("opacity", 1)
+        .attr("class", "tooltip")
+        .style("background-color", "white")
+        .style("border", "solid")
+        .style("border-width", "2px")
+        .style("border-radius", "5px")
+        .style("padding", "5px")
+    */
+
+    // Three function that change the tooltip when user hover / move / leave a cell
+    var mouseover = function(d) {
+    }
+    var mousemove = function(event, d) {
+        statsRadar.select("#legend").text(d.name);
+        // console.log(d3.pointer(event)[0] + " " + d3.pointer(event)[1] + " " + d.name);
+    }
+    var mouseleave = function() {
+        statsRadar.select("#legend").text("");
+    }
+
     //append backgrounds	
     blobWrapper.append("path")
         .attr("class", "radarArea")
-        .attr("d", function(d,i) { return radarLine(d); })
-        .style("fill", function(d,i) { return cfg.color(i); })
+        .attr("d", function(d,i) { return radarLine(d.values); })
+        .style("fill", function(d,i) {
+            if (["q1", "median", "q3"].includes(d.name)) {
+                return cfg.color(i);
+            } else {
+                return "none";
+            }
+        })
         .style("fill-opacity", cfg.opacityArea)
         .on('mouseover', function (d,i){
             //Dim all blobs
@@ -529,27 +564,38 @@ function statsRadar(playerList){
             //Bring back the hovered over blob
             d3.select(this)
                 .transition().duration(200)
-                .style("fill-opacity", 0.7);	
+                .style("fill-opacity", 0.7);
+            mouseover(d);
+        })
+        .on('mousemove', (event, d) =>{
+            mousemove(event, d);
         })
         .on('mouseout', function(){
             //Bring back all blobs
             d3.selectAll(".radarArea")
                 .transition().duration(200)
                 .style("fill-opacity", cfg.opacityArea);
+            mouseleave();
         });
 
     //outlines	
 	blobWrapper.append("path")
         .attr("class", "radarStroke")
-        .attr("d", function(d,i) { return radarLine(d); })
+        .attr("d", function(d,i) { return radarLine(d.values); })
         .style("stroke-width", cfg.strokeWidth + "px")
-        .style("stroke", function(d,i) { return cfg.color(i); })
+        .style("stroke", function(d,i) {
+            if (["min", "max"].includes(d.name)) {
+                return cfg.color(i);
+            } else {
+                return "none";
+            }
+        })
         .style("fill", "none")
         .style("filter" , "url(#glow)");
-    
+    /*
     //append the circles
     blobWrapper.selectAll(".radarCircle")
-        .data(function(d,i) { return d; })
+        .data(function(d,i) { return d.values; })
         .enter().append("circle")
         .attr("class", "radarCircle")
         .attr("r", cfg.dotRadius)
@@ -557,42 +603,20 @@ function statsRadar(playerList){
         .attr("cy", function(d,i){ return radiusScale(d.value) * Math.sin(angleSlice*i - Math.PI/2); })
         .style("fill", function(d,i,j) { return cfg.color(j); })
         .style("fill-opacity", 0.8);
-    /*
-    //invisible circles for tooltip
-    var blobCircleWrapper = statsRadar.selectAll(".radarCircleWrapper")
-        .data(allAxis)
-        .enter().append("g")
-        .attr("class", "radarCircleWrapper");
-        
-    //invisible circles on top for the mouseover pop-up
-    blobCircleWrapper.selectAll(".radarInvisibleCircle")
-        .data(function(d,i) { return d; })
-        .enter().append("circle")
-        .attr("class", "radarInvisibleCircle")
-        .attr("r", cfg.dotRadius*1.5)
-        .attr("cx", function(d,i){ return radiusScale(d.value) * Math.cos(angleSlice*i - Math.PI/2); })
-        .attr("cy", function(d,i){ return radiusScale(d.value) * Math.sin(angleSlice*i - Math.PI/2); })
-        .style("fill", "none")
-        .style("pointer-events", "all")
-        .on("mouseover", function(d,i) {
-            newX =  parseFloat(d3.select(this).attr('cx')) - 10;
-            newY =  parseFloat(d3.select(this).attr('cy')) - 10;
-                    
-            tooltip
-                .attr('x', newX)
-                .attr('y', newY)
-                .text(Format(d.value))
-                .transition().duration(200)
-                .style('opacity', 1);
-        })
-        .on("mouseout", function(){
-            tooltip.transition().duration(200)
-                .style("opacity", 0);
-        });
-        
-    //tooltip for when you hover over a circle
-    var tooltip = axisGrid.append("text")
-        .attr("class", "tooltip")
-        .style("opacity", 0);
-        */
+    */
+    // legend in top left corner
+    statsRadar.append("text")
+        .attr("class", "legend")
+        .attr("id", "legend")
+        .style("font-size", "14px")
+        .attr("text-anchor", "middle")
+        .attr("fill", "lightblue")
+        .attr("dy", "0.35em")
+        .attr("x", -cfg.w/2)
+        .attr("y", -cfg.h/2)
+        .text("");
+}
+
+function updateRadarChart(playerData){
+
 }
