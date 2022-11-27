@@ -1,5 +1,5 @@
 const ctx = {
-    YEAR : 2015,
+    YEAR : 2022,
     width : 1900,
     height : 1900,
     footballFieldLineWidth : 0.2,
@@ -28,8 +28,8 @@ function createViz(){
     rootG.append("g").attr("id","bkgG");
     rootG.append("g").attr("id","footballfieldG");
     rootG.append("g").attr("id", "bestPlayerListG");
-    rootG.append("g").attr("id","comparisonG");
     rootG.append("g").attr("id","statsG");
+    rootG.append("g").attr("id","playerDetailG");
 
     let background = d3.select("#bkgG");
     background.append("rect")
@@ -40,6 +40,7 @@ function createViz(){
         .attr("fill", ctx.backgroundGrey);
 
     initFootballField();
+    initPlayerDetailView();
     loadData();
 }
 
@@ -116,7 +117,7 @@ function findPlayerPositions(selection){
 
 function initFootballField(){
     let footballfieldG = d3.select("#footballfieldG");
-    footballfieldG.attr("transform", "translate(100, 100)");
+    footballfieldG.attr("transform", "translate(50, 100)");
     ctx.footballFieldScaleX = d3.scaleLinear()
         .domain([0, 60])
         .range([0, 600]);
@@ -295,7 +296,7 @@ function changeGrassColor(color) {
 
 function initBestPlayerList(playerList){
     let listGroup = d3.select("#bestPlayerListG");
-    listGroup.attr("transform", "translate(705, 100)");
+    listGroup.attr("transform", "translate(655, 100)");
     let bestPlayers = playerList.sort((a, b) => b.overall - a.overall).slice(0, 10);
     // show best players in button list next in the listGroup
     let bestPlayerButtons = listGroup.selectAll("g")
@@ -307,7 +308,7 @@ function initBestPlayerList(playerList){
         .attr("y", 0)
         .attr("width", 300)
         .attr("height", 40)
-        .attr("fill", "#004e82")
+        .attr("fill", "#18414e")
         .attr("stroke", "white")
         .attr("stroke-width", 1);
     bestPlayerButtons.append("text")
@@ -332,6 +333,7 @@ function initBestPlayerList(playerList){
         .attr("height", 38);
     bestPlayerButtons.on("click", (event, d) => {
         console.log("Clicked on " + d.short_name);
+        updatePlayerDetailView(d);
     });
 }
 
@@ -415,7 +417,7 @@ function statsRadar(playerList){
         .domain([0, 100]);
 
     let statsRadar = d3.select("#statsG");
-    statsRadar.attr("transform", "translate(900, 700)");
+    statsRadar.attr("transform", "translate(850, 700)");
     
     // circular grid
     //wrapper for the grid & axes
@@ -586,6 +588,161 @@ function statsRadar(playerList){
         .text("");
 }
 
-function updateRadarChart(playerData){
+//---------------------------------------------------------------------------------------------------------
 
+// player detail view
+
+function initPlayerDetailView(){
+    let playerDetailG = d3.select("#playerDetailG");
+    playerDetailG.attr("transform", "translate(1100, 100)");
+    playerDetailG.append("rect")
+        .attr("width", 750)
+        .attr("height", 900)
+        .attr("fill", "#6C8289");
+    
+    playerDetailG.append("text")
+        .attr("id", "playerName")
+        .attr("x", 10)
+        .attr("y", 50)
+        .attr("font-size", 50)
+        .attr("font-weight", "bold")
+        .attr("fill", "#18414e")
+        .text("Player Name");
+    
+    playerDetailG.append("text")
+        .attr("id", "playerTeam")
+        .attr("x", 10)
+        .attr("y", 100)
+        .attr("font-size", 30)
+        .attr("fill", "#18414e")
+        .text("Team Name");
+
+    playerDetailG.append("text")
+        .attr("id", "playerNationality")
+        .attr("x", 740)
+        .attr("y", 100)
+        .attr("font-size", 30)
+        .attr("fill", "#18414e")
+        .attr("text-anchor", "end")
+        .text("Nationality");
+    
+    playerDetailG.append("text")
+        .attr("id", "playerPosition")
+        .attr("x", 740)
+        .attr("y", 50)
+        .attr("font-size", 50)
+        .attr("font-weight", "bold")
+        .attr("fill", "#18414e")
+        .attr("text-anchor", "end")
+        .text("POS");
+
+    playerDetailG.append("circle")
+        .attr("cx", 375)
+        .attr("cy", 225)
+        .attr("r", 125)
+        .attr("fill", "#18414e");
+
+    playerDetailG.append("rect")
+        .attr("x", 250)
+        .attr("y", 150)
+        .attr("width", 250)
+        .attr("height", 250)
+        .attr("fill", "#18414e");
+
+    playerDetailG.append("image")
+        .attr("id", "playerImage")
+        .attr("x", 300)
+        .attr("y", 210)
+        .attr("width", 150)
+        .attr("height", 150)
+        .attr("anchor", "middle")
+        .attr("xlink:href", "https://cdn.sofifa.net/players/notfound_0_120.png");
+    
+    playerDetailG.append("image")
+        .attr("id", "clubFlag")
+        .attr("x", 275)
+        .attr("y", 160)
+        .attr("width", 40)
+        .attr("height", 40)
+        .attr("xlink:href", "https://cdn.sofifa.net/teams/21/60.png");
+    
+    playerDetailG.append("image")
+        .attr("id", "nationalFlag")
+        .attr("x", 435)
+        .attr("y", 160)
+        .attr("width", 40)
+        .attr("height", 40)
+        .attr("xlink:href", "https://cdn.sofifa.net/flags/de.png");
+
+    playerDetailG.append("circle")
+        .attr("cx", 375)
+        .attr("cy", 150)
+        .attr("r", 40)
+        .attr("fill", "#6C8289");
+    
+    playerDetailG.append("text")
+        .attr("id", "playerOverall")
+        .attr("x", 375)
+        .attr("y", 160)
+        .attr("font-size", 30)
+        .attr("font-weight", "bold")
+        .attr("fill", "#18414e")
+        .attr("text-anchor", "middle")
+        .text("OVR");
+    
+    playerDetailG.append("text")
+        .attr("id", "playerAge")
+        .attr("x", 10)
+        .attr("y", 150)
+        .attr("font-size", 20)
+        .attr("fill", "#18414e")
+        .text("Age");
+    
+    playerDetailG.append("text")
+        .attr("id", "playerHeight")
+        .attr("x", 10)
+        .attr("y", 180)
+        .attr("font-size", 20)
+        .attr("fill", "#18414e")
+        .text("Height");
+    
+    playerDetailG.append("text")
+        .attr("id", "playerWeight")
+        .attr("x", 10)
+        .attr("y", 210)
+        .attr("font-size", 20)
+        .attr("fill", "#18414e")
+        .text("Weight");
+    
+    playerDetailG.append("text")
+        .attr("id", "playerValue")
+        .attr("x", 10)
+        .attr("y", 240)
+        .attr("font-size", 20)
+        .attr("fill", "#18414e")
+        .text("Value");
+    
+    playerDetailG.append("text")
+        .attr("id", "playerWage")
+        .attr("x", 10)
+        .attr("y", 270)
+        .attr("font-size", 20)
+        .attr("fill", "#18414e")
+        .text("Wage");
+}
+
+function updatePlayerDetailView(player){
+    d3.select("#playerName").text(player.short_name);
+    d3.select("#playerTeam").text(player.club_name);
+    d3.select("#playerNationality").text(player.nationality_name);
+    d3.select("#playerPosition").text(player.club_position);
+    d3.select("#playerOverall").text(player.overall);
+    d3.select("#playerAge").text("Age: " + player.age);
+    d3.select("#playerHeight").text("Height: " + player.height_cm);
+    d3.select("#playerWeight").text("Weight: " + player.weight_kg);
+    d3.select("#playerValue").text("Value: " + player.value_eur);
+    d3.select("#playerWage").text("Wage: " + player.wage_eur);
+    d3.select("#playerImage").attr("xlink:href", player.player_face_url);
+    d3.select("#clubFlag").attr("xlink:href", player.club_logo_url);
+    d3.select("#nationalFlag").attr("xlink:href", player.nation_flag_url);
 }
