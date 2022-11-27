@@ -592,6 +592,16 @@ function statsRadar(playerList){
 
 // player detail view
 
+const statDicts = {
+    attacking_stats: {"Crossing": "attacking_crossing", "Finishing": "attacking_finishing", "Heading Accuracy": "attacking_heading_accuracy", "Short Passing": "attacking_short_passing", "Volleys": "attacking_volleys"},
+    skill_stats: {"Dribbling": "skill_dribbling", "Curve": "skill_curve", "FK Accuracy": "skill_fk_accuracy", "Long Passing": "skill_long_passing", "Ball Control": "skill_ball_control"},
+    movement_stats: {"Acceleration": "movement_acceleration", "Sprint Speed": "movement_sprint_speed", "Agility": "movement_agility", "Reactions": "movement_reactions", "Balance": "movement_balance"},
+    power_stats: {"Shot Power": "power_shot_power", "Jumping": "power_jumping", "Stamina": "power_stamina", "Strength": "power_strength", "Long Shots": "power_long_shots"},
+    mentality_stats: {"Aggression": "mentality_aggression", "Interceptions": "mentality_interceptions", "Positioning": "mentality_positioning", "Vision": "mentality_vision", "Penalties": "mentality_penalties", "Composure": "mentality_composure"},
+    defending_stats: {"Marking": "defending_marking_awareness", "Standing Tackle": "defending_standing_tackle", "Sliding Tackle": "defending_sliding_tackle"},
+    goalkeeping_stats: {"Diving": "goalkeeping_diving", "Handling": "goalkeeping_handling", "Kicking": "goalkeeping_kicking", "Positioning": "goalkeeping_positioning", "Reflexes": "goalkeeping_reflexes", "Speed": "goalkeeping_speed"},
+}
+
 function initPlayerDetailView(){
     let playerDetailG = d3.select("#playerDetailG");
     playerDetailG.attr("transform", "translate(1100, 100)");
@@ -646,7 +656,7 @@ function initPlayerDetailView(){
         .attr("x", 250)
         .attr("y", 150)
         .attr("width", 250)
-        .attr("height", 250)
+        .attr("height", 230)
         .attr("fill", "#18414e");
 
     playerDetailG.append("image")
@@ -729,6 +739,134 @@ function initPlayerDetailView(){
         .attr("font-size", 20)
         .attr("fill", "#18414e")
         .text("Wage");
+    
+    playerDetailG.append("g")
+        .attr("id", "attackingStats")
+        .attr("transform", "translate(0, 420)");
+    
+    let attackingStats = d3.select("#attackingStats");
+
+    attackingStats.append("text")
+        .attr("x", 10)
+        .attr("y", 0)
+        .attr("font-size", 15)
+        .attr("font-weight", "bold")
+        .attr("fill", "#18414e")
+        .text("Attacking");
+    
+    i = 0;
+    for (let [key, value] of Object.entries(statDicts.attacking_stats)){
+        initPlayerStatDetailBar(10, i * 40 + 25, attackingStats, key, value, 0);
+        i++;
+    }
+
+    playerDetailG.append("g")
+        .attr("id", "skillStats")
+        .attr("transform", "translate(0, 660)");
+    
+    let skillStats = d3.select("#skillStats");
+
+    skillStats.append("text")
+    .attr("x", 10)
+    .attr("y", 0)
+    .attr("font-size", 15)
+    .attr("font-weight", "bold")
+    .attr("fill", "#18414e")
+    .text("Skills");
+
+    for (let i = 0; i < 5; i++) {
+        initPlayerStatDetailBar(10, i * 40 + 25, skillStats, Object.keys(statDicts.skill_stats)[i], Object.values(statDicts.skill_stats)[i], 0);
+    }
+
+    playerDetailG.append("g")
+        .attr("id", "movementStats")
+        .attr("transform", "translate(187.5, 420)");
+    
+    let movementStats = d3.select("#movementStats");
+
+    movementStats.append("text")
+        .attr("x", 10)
+        .attr("y", 0)
+        .attr("font-size", 15)
+        .attr("font-weight", "bold")
+        .attr("fill", "#18414e")
+        .text("Movement");
+
+    for (let i = 0; i < 5; i++) {
+        initPlayerStatDetailBar(10, i * 40 + 25, movementStats, Object.keys(statDicts.movement_stats)[i], Object.values(statDicts.movement_stats)[i], 0);
+    }
+
+    playerDetailG.append("g")
+        .attr("id", "powerStats")
+        .attr("transform", "translate(187.5, 660)");
+    
+    let powerStats = d3.select("#powerStats");
+
+    powerStats.append("text")
+        .attr("x", 10)
+        .attr("y", 0)
+        .attr("font-size", 15)
+        .attr("font-weight", "bold")
+        .attr("fill", "#18414e")
+        .text("Power");
+
+    for (let i = 0; i < 5; i++) {
+        initPlayerStatDetailBar(10, i * 40 + 25, powerStats, Object.keys(statDicts.power_stats)[i], Object.values(statDicts.power_stats)[i], 0);
+    }
+
+    playerDetailG.append("g")
+        .attr("id", "mentalityStats")
+        .attr("transform", "translate(375, 420)");
+    
+    let mentalityStats = d3.select("#mentalityStats");
+
+    mentalityStats.append("text")
+        .attr("x", 10)
+        .attr("y", 0)
+        .attr("font-size", 15)
+        .attr("font-weight", "bold")
+        .attr("fill", "#18414e")
+        .text("Mentality");
+
+    for (let i = 0; i < 6; i++) {
+        initPlayerStatDetailBar(10, i * 40 + 25, mentalityStats, Object.keys(statDicts.mentality_stats)[i], Object.values(statDicts.mentality_stats)[i], 0);
+    }
+
+    playerDetailG.append("g")
+        .attr("id", "defendingStats")
+        .attr("transform", "translate(375, 700)");
+    
+    let defendingStats = d3.select("#defendingStats");
+
+    defendingStats.append("text")
+        .attr("x", 10)
+        .attr("y", 0)
+        .attr("font-size", 15)
+        .attr("font-weight", "bold")
+        .attr("fill", "#18414e")
+        .text("Defending");
+    
+    for (let i = 0; i < 3; i++) {
+        initPlayerStatDetailBar(10, i * 40 + 25, defendingStats, Object.keys(statDicts.defending_stats)[i], Object.values(statDicts.defending_stats)[i], 0);
+    }
+
+    playerDetailG.append("g")
+        .attr("id", "goalkeepingStats")
+        .attr("transform", "translate(562.5, 420)");
+    
+    let goalkeepingStats = d3.select("#goalkeepingStats");
+
+    goalkeepingStats.append("text")
+        .attr("x", 10)
+        .attr("y", 0)
+        .attr("font-size", 15)
+        .attr("font-weight", "bold")
+        .attr("fill", "#18414e")
+        .text("Goalkeeping");
+    
+    for (let i = 0; i < 6; i++) {
+        initPlayerStatDetailBar(10, i * 40 + 25, goalkeepingStats, Object.keys(statDicts.goalkeeping_stats)[i], Object.values(statDicts.goalkeeping_stats)[i], 0);
+    }
 }
 
 function updatePlayerDetailView(player){
@@ -745,4 +883,67 @@ function updatePlayerDetailView(player){
     d3.select("#playerImage").attr("xlink:href", player.player_face_url);
     d3.select("#clubFlag").attr("xlink:href", player.club_logo_url);
     d3.select("#nationalFlag").attr("xlink:href", player.nation_flag_url);
+
+    for (let i = 0; i < 7; i++) {
+        updatePlayerStatDetailBars(Object.values(Object.values(statDicts)[i]), player);
+    }
+}
+
+function initPlayerStatDetailBar(x, y, g, name, attr_name, value){
+    let statScale = d3.scaleLinear()
+        .domain([0,100])
+        .range([0,160]);
+    
+    g.append("text")
+        .attr("x", x)
+        .attr("y", y)
+        .attr("font-size", 15)
+        .attr("fill", "#18414e")
+        .text(name);
+
+    g.append("text")
+        .attr("id", "PlayerAttributeVal_" + attr_name)
+        .attr("x", x + 160)
+        .attr("y", y)
+        .attr("font-size", 15)
+        .attr("text-anchor", "end")
+        .attr("fill", "#18414e")
+        .text(value);
+    
+    g.append("rect")
+        .attr("x", x)
+        .attr("y", y + 5)
+        .attr("width", 160)
+        .attr("height", 10)
+        .attr("fill", "#18414e");
+    
+    g.append("rect")
+        .attr("id", "PlayerAttribute_"+attr_name)
+        .attr("x", x - 1)
+        .attr("y", y + 4)
+        .attr("width", statScale(value) + 1)
+        .attr("height", 12)
+        .attr("fill", "#6C8289");
+    
+}
+
+function updatePlayerStatDetailBars(names, player){
+    let statScale = d3.scaleLinear()
+        .domain([0,100])
+        .range([0,160]);
+    
+    let colorScale = d3.scaleLinear()
+        .domain([0,50,100])
+        .range(["maroon","goldenrod","ForestGreen"]);
+    
+    for (let i = 0; i < names.length; i++) {
+        let value = player[names[i]];
+        d3.select("#PlayerAttribute_"+names[i])
+            .transition()
+            .duration(1000)
+            .attr("width", statScale(value) + 1)
+            .attr("fill", colorScale(value));
+        d3.select("#PlayerAttributeVal_"+names[i])
+            .text(value);
+    }
 }
