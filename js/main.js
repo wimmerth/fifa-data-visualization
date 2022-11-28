@@ -39,10 +39,25 @@ function createViz(){
         .attr("height", ctx.height)
         .attr("fill", ctx.backgroundGrey);
 
-    initFootballField();
+    loadPlayerPositions();
     initPlayerDetailView();
     loadData();
 }
+
+function loadPlayerPositions(){
+    d3.csv("player_positions.csv").then((d) => {
+        let playerPositions = {};
+        for (let i = 0; i < (d.length); i++){
+            playerPositions[d[i].pos] = [d[i].x_min, d[i].x_max, d[i].y_min, d[i].y_max];
+        }
+        console.log("Players positions loaded");
+        ctx.playerPositions = playerPositions;
+        initFootballField();
+    }).catch((error) => {
+        console.log(error);
+    });
+}
+
 
 function loadData(){
     d3.csv("fifa_players_15_22.csv").then((data) => {
@@ -61,18 +76,6 @@ function loadData(){
         console.log("Number of players in " + ctx.YEAR + ": " + playersPerYear[ctx.YEAR].length);
         ctx.playersPerYear = playersPerYear;
         initPlots(ctx.playersPerYear[ctx.YEAR]);
-    }).catch((error) => {
-        console.log(error);
-    });
-
-    d3.csv("player_positions.csv").then((d) => {
-        let playerPositions = {};
-        for (let i = 0; i < (d.length); i++){
-            playerPositions[d[i].pos] = [d[i].x_min, d[i].x_max, d[i].y_min, d[i].y_max];
-        }
-        console.log("Players positions loaded");
-        ctx.playerPositions = playerPositions;
-        console.log(ctx.playerPositions);
     }).catch((error) => {
         console.log(error);
     });
@@ -269,6 +272,17 @@ function initFootballField(){
         .attr("height", ctx.footballFieldScaleY(90))
         .attr("fill", "rgba(0,0,0,0)");
 
+    for ([pos_title, pos] of Object.entries(ctx.playerPositions)) {
+        footballfieldG.append("rect")
+            .attr("id", "position-" + pos_title)
+            .attr("x", ctx.footballFieldScaleX(pos[0]))
+            .attr("y", ctx.footballFieldScaleY(pos[2]))
+            .attr("width", ctx.footballFieldScaleX(pos[1] - pos[0]))
+            .attr("height", ctx.footballFieldScaleY(pos[3] - pos[2]))
+            .attr("fill", "green")
+            .attr("opacity", 0);
+    }
+
     setupBrush();
 }
 
@@ -282,9 +296,20 @@ function setupBrush(){
             if (event.selection === null) {
                 console.log("No selection");
                 changeGrassColor(ctx.grassGreen);
+                for (pos_title of Object.keys(ctx.playerPositions)) {
+                    d3.select("#position-" + pos_title).attr("opacity", 0);
+                }
             } else {
                 console.log("Selection: " + event.selection);
                 changeGrassColor("gray");
+                pos_list = findPlayerPositions(event.selection);
+                for (pos_title of Object.keys(ctx.playerPositions)) {
+                    if (pos_list.includes(pos_title)) {
+                        d3.select("#position-" + pos_title).attr("opacity", 0.6);
+                    } else {
+                        d3.select("#position-" + pos_title).attr("opacity", 0);
+                    } 
+                }
             }
             ctx.SELECTION = event.selection;
             updatePlotsOnSelection(ctx.YEAR, ctx.SELECTION);
