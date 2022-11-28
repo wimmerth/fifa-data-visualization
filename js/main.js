@@ -28,8 +28,8 @@ function createViz(){
     rootG.append("g").attr("id","bkgG");
     rootG.append("g").attr("id","footballfieldG");
     rootG.append("g").attr("id", "bestPlayerListG");
-    rootG.append("g").attr("id","statsG");
     rootG.append("g").attr("id","playerDetailG");
+    // rootG.append("g").attr("id","statsG");
 
     let background = d3.select("#bkgG");
     background.append("rect")
@@ -80,14 +80,18 @@ function loadData(){
 
 function initPlots(data){
     initBestPlayerList(data);
-    statsRadar(data);
+    groupStatsRadar(data);
+    playerStatsRadar(data);
+    // statsRadar(data);
 }
 
 function updatePlotsOnSelection(year, selection){
     let playerPositions = findPlayerPositions(selection);
     data = ctx.playersPerYear[year].filter(d => playerPositions.includes(d.club_position));
     updateBestPlayerList(data);
-    statsRadar(data);
+    groupStatsRadar(data);
+    playerStatsRadar(data);
+    // statsRadar(data);
 }
 
 function findPlayerPositions(selection){
@@ -385,10 +389,10 @@ function summaryStats(playerList){
     return orderedStats;
 }
 
-function statsRadar(playerList){
-    document.getElementById("statsG").innerHTML = '';
-
+function groupStatsRadar(data){
     let cfg = {
+        x: 850,
+        y: 750,
         w: 300,				//width of the circle
         h: 300,				//height of the circle
         levels: 3,				//levels of inner circles
@@ -404,6 +408,56 @@ function statsRadar(playerList){
         roundStrokes: true
     };
 
+    createRadar("statsG","rootG", data, cfg);
+
+}
+
+function playerStatsRadar(data){
+    let cfg = {
+        x: 625,
+        y: 265,
+        w: 150,				//width of the circle
+        h: 150,				//height of the circle
+        levels: 3,				//levels of inner circles
+        maxValue: 100, 			//value that the biggest circle will represent
+        labelFactor: 1.25, 	//distance between outer circle and label
+        wrapWidth: 60, 		//number of pixels after which a label needs to be given a new line
+        opacityArea: 0.35, 	//opacity of the area of the blob
+        dotRadius: 4, 			//size of the colored circles of each blog
+        opacityCircles: 0.1, 	//opacity of the circles of each blob
+        strokeWidth: 2, 		//width of the stroke around each blob
+        // color: d3.scaleOrdinal(d3.schemeCategory10),
+        color: (d) => "lightblue",
+        roundStrokes: true
+    };
+
+    createRadar("playerStatsG","playerDetailG", data, cfg);
+
+}
+
+function createRadar(id, rootId, playerList, cfg){
+    if(document.getElementById(id) != null){
+        document.getElementById(id).remove();
+    }
+    
+    // let cfg = {
+    //     x: 850,
+    //     y: 700,
+    //     w: 300,				//width of the circle
+    //     h: 300,				//height of the circle
+    //     levels: 3,				//levels of inner circles
+    //     maxValue: 100, 			//value that the biggest circle will represent
+    //     labelFactor: 1.25, 	//distance between outer circle and label
+    //     wrapWidth: 60, 		//number of pixels after which a label needs to be given a new line
+    //     opacityArea: 0.35, 	//opacity of the area of the blob
+    //     dotRadius: 4, 			//size of the colored circles of each blog
+    //     opacityCircles: 0.1, 	//opacity of the circles of each blob
+    //     strokeWidth: 2, 		//width of the stroke around each blob
+    //     // color: d3.scaleOrdinal(d3.schemeCategory10),
+    //     color: (d) => "lightblue",
+    //     roundStrokes: true
+    // };
+
     // let allAxis = [findAxis(playerList)];
     let allAxis = summaryStats(playerList);
     let axisNames = (allAxis[0]["values"].map(function(i, j){return i.axis}));	//names of each axis
@@ -413,11 +467,15 @@ function statsRadar(playerList){
     
     //radius scale
     let radiusScale = d3.scaleLinear()
-        .range([0, radius])
-        .domain([0, 100]);
-
-    let statsRadar = d3.select("#statsG");
-    statsRadar.attr("transform", "translate(850, 700)");
+    .range([0, radius])
+    .domain([0, 100]);
+    
+    let statsRadar = d3.select("#"+rootId)
+                        .append("g")
+                        .attr("id", id);
+    
+    
+    statsRadar.attr("transform", `translate(${cfg.x}, ${cfg.y})`);
     
     // circular grid
     //wrapper for the grid & axes
