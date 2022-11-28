@@ -548,30 +548,9 @@ function createRadar(id, rootId, playerList, cfg){
         .data(allAxis)
         .enter().append("g")
         .attr("class", "radarWrapper");
-           
-    // create a tooltip
-    /*
-    var Tooltip = statsRadar
-        .append("div")
-        .style("opacity", 1)
-        .attr("class", "tooltip")
-        .style("background-color", "white")
-        .style("border", "solid")
-        .style("border-width", "2px")
-        .style("border-radius", "5px")
-        .style("padding", "5px")
-    */
 
-    // Three function that change the tooltip when user hover / move / leave a cell
-    var mouseover = function(d) {
-    }
-    var mousemove = function(event, d) {
-        statsRadar.select("#legend").text(d.name);
-        // console.log(d3.pointer(event)[0] + " " + d3.pointer(event)[1] + " " + d.name);
-    }
-    var mouseleave = function() {
-        statsRadar.select("#legend").text("");
-    }
+    blobWrapper.append("title")
+        .text(function(d, i) { return d.name; });
 
     //append backgrounds	
     blobWrapper.append("path")
@@ -594,17 +573,12 @@ function createRadar(id, rootId, playerList, cfg){
             d3.select(this)
                 .transition().duration(200)
                 .style("fill-opacity", 0.7);
-            mouseover(d);
-        })
-        .on('mousemove', (event, d) =>{
-            mousemove(event, d);
         })
         .on('mouseout', function(){
             //Bring back all blobs
             d3.selectAll(".radarArea")
                 .transition().duration(200)
                 .style("fill-opacity", cfg.opacityArea);
-            mouseleave();
         });
 
     //outlines	
@@ -633,17 +607,7 @@ function createRadar(id, rootId, playerList, cfg){
         .style("fill", function(d,i,j) { return cfg.color(j); })
         .style("fill-opacity", 0.8);
     */
-    // legend in top left corner
-    statsRadar.append("text")
-        .attr("class", "legend")
-        .attr("id", "legend")
-        .style("font-size", "14px")
-        .attr("text-anchor", "middle")
-        .attr("fill", "lightblue")
-        .attr("dy", "0.35em")
-        .attr("x", -cfg.w/2)
-        .attr("y", -cfg.h/2)
-        .text("");
+    
 }
 
 //---------------------------------------------------------------------------------------------------------
