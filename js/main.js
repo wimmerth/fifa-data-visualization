@@ -1,15 +1,15 @@
 const ctx = {
-    YEAR : 2022,
-    width : 1900,
-    height : 1900,
-    footballFieldLineWidth : 0.2,
-    backgroundGrey : "#2b2b2b",
-    grassGreen : "#338033",
-    SELECTION : null,
+    YEAR: 2022,
+    width: 1900,
+    height: 1900,
+    footballFieldLineWidth: 0.2,
+    backgroundGrey: "#2b2b2b",
+    grassGreen: "#338033",
+    SELECTION: null,
 }
 
-function updateYear(input){
-    if (ctx.YEAR + input >= 2015 && ctx.YEAR + input <= 2022){
+function updateYear(input) {
+    if (ctx.YEAR + input >= 2015 && ctx.YEAR + input <= 2022) {
         ctx.YEAR = ctx.YEAR + input;
         d3.select("#yearLabel").text(ctx.YEAR);
         console.log("Number of players in " + ctx.YEAR + ": " + ctx.playersPerYear[ctx.YEAR].length);
@@ -19,16 +19,16 @@ function updateYear(input){
     }
 }
 
-function createViz(){
+function createViz() {
     console.log("Using D3 v" + d3.version);
     let svg = d3.select("#main").append("svg");
     svg.attr("width", ctx.width);
     svg.attr("height", ctx.height);
     var rootG = svg.append("g").attr("id", "rootG");
-    rootG.append("g").attr("id","bkgG");
-    rootG.append("g").attr("id","footballfieldG");
+    rootG.append("g").attr("id", "bkgG");
+    rootG.append("g").attr("id", "footballfieldG");
     rootG.append("g").attr("id", "bestPlayerListG");
-    rootG.append("g").attr("id","playerDetailG");
+    rootG.append("g").attr("id", "playerDetailG");
     // rootG.append("g").attr("id","statsG");
 
     let background = d3.select("#bkgG");
@@ -44,10 +44,10 @@ function createViz(){
     loadData();
 }
 
-function loadPlayerPositions(){
+function loadPlayerPositions() {
     d3.csv("player_positions.csv").then((d) => {
         let playerPositions = {};
-        for (let i = 0; i < (d.length); i++){
+        for (let i = 0; i < (d.length); i++) {
             playerPositions[d[i].pos] = [d[i].x_min, d[i].x_max, d[i].y_min, d[i].y_max];
         }
         console.log("Players positions loaded");
@@ -59,14 +59,14 @@ function loadPlayerPositions(){
 }
 
 
-function loadData(){
+function loadData() {
     d3.csv("fifa_players_15_22.csv").then((data) => {
         console.log("Number of rows: " + data.length);
         let playersPerYear = {};
-        for (let i = 0; i < data.length; i++){
+        for (let i = 0; i < data.length; i++) {
             let row = data[i];
             let year = row["year"];
-            if (year in playersPerYear){
+            if (year in playersPerYear) {
                 playersPerYear[year].push(row);
             } else {
                 playersPerYear[year] = [row];
@@ -75,30 +75,32 @@ function loadData(){
         console.log("Number of years: " + Object.keys(playersPerYear).length);
         console.log("Number of players in " + ctx.YEAR + ": " + playersPerYear[ctx.YEAR].length);
         ctx.playersPerYear = playersPerYear;
+        ctx.currentDataSelection = playersPerYear[ctx.YEAR];
         initPlots(ctx.playersPerYear[ctx.YEAR]);
     }).catch((error) => {
         console.log(error);
     });
 }
 
-function initPlots(data){
+function initPlots(data) {
     initBestPlayerList(data);
     groupStatsRadar(data);
     playerStatsRadar(data);
     // statsRadar(data);
 }
 
-function updatePlotsOnSelection(year, selection){
+function updatePlotsOnSelection(year, selection) {
     let playerPositions = findPlayerPositions(selection);
     data = ctx.playersPerYear[year].filter(d => playerPositions.includes(d.club_position));
+    ctx.currentDataSelection = data;
     updateBestPlayerList(data);
     groupStatsRadar(data);
     playerStatsRadar(data);
     // statsRadar(data);
 }
 
-function findPlayerPositions(selection){
-    if (selection === null){
+function findPlayerPositions(selection) {
+    if (selection === null) {
         console.log(Object.keys(ctx.playerPositions));
         return Object.keys(ctx.playerPositions);
     } else {
@@ -108,10 +110,10 @@ function findPlayerPositions(selection){
         let y_max = ctx.footballFieldInverseScaleY(selection[1][1]);
         console.log("x_min: " + x_min + ", x_max: " + x_max + ", y_min: " + y_min + ", y_max: " + y_max);
         let selectedPositions = [];
-        for (let position in ctx.playerPositions){
+        for (let position in ctx.playerPositions) {
             let pos = ctx.playerPositions[position];
             // select position if there is an overlap between the selection and the position
-            if (x_min < pos[1] && x_max > pos[0] && y_min < pos[3] && y_max > pos[2]){
+            if (x_min < pos[1] && x_max > pos[0] && y_min < pos[3] && y_max > pos[2]) {
                 selectedPositions.push(position);
             }
         }
@@ -122,7 +124,7 @@ function findPlayerPositions(selection){
 
 //---------------------------------------------------------------------------------------------------------
 
-function initFootballField(){
+function initFootballField() {
     let footballfieldG = d3.select("#footballfieldG");
     footballfieldG.attr("transform", "translate(50, 100)");
     ctx.footballFieldScaleX = d3.scaleLinear()
@@ -139,7 +141,7 @@ function initFootballField(){
         .range([0, 90]);
     let footballfield = footballfieldG.append("g").attr("id", "footballfield");
     let color = ctx.grassGreen;
-    
+
     footballfield.append("rect")
         .attr("x", 0)
         .attr("y", 0)
@@ -176,7 +178,7 @@ function initFootballField(){
         .attr("r", ctx.footballFieldScaleX(9.15 - ctx.footballFieldLineWidth))
         .attr("fill", color)
         .attr("class", "grass");
-    
+
     footballfield.append("rect")
         .attr("x", ctx.footballFieldScaleX((60 - 40.32) / 2))
         .attr("y", ctx.footballFieldScaleY(0))
@@ -230,7 +232,7 @@ function initFootballField(){
         .attr("height", ctx.footballFieldScaleY(5.5 - 2 * ctx.footballFieldLineWidth))
         .attr("fill", color)
         .attr("class", "grass");
-    
+
     footballfield.append("circle")
         .attr("cx", ctx.footballFieldScaleX(30))
         .attr("cy", ctx.footballFieldScaleY(11))
@@ -260,11 +262,11 @@ function initFootballField(){
         .attr("fill", "white");
     footballfield.append("rect")
         .attr("x", 0)
-        .attr("y", ctx.footballFieldScaleY(45-ctx.footballFieldLineWidth / 2))
+        .attr("y", ctx.footballFieldScaleY(45 - ctx.footballFieldLineWidth / 2))
         .attr("width", ctx.footballFieldScaleX(60))
         .attr("height", ctx.footballFieldScaleY(ctx.footballFieldLineWidth))
         .attr("fill", "white");
-    
+
     footballfield.append("rect")
         .attr("x", 0)
         .attr("y", 0)
@@ -280,16 +282,19 @@ function initFootballField(){
             .attr("width", ctx.footballFieldScaleX(pos[1] - pos[0]))
             .attr("height", ctx.footballFieldScaleY(pos[3] - pos[2]))
             .attr("fill", "green")
-            .attr("opacity", 0);
+            .style("stroke-dasharray", "10,5")
+            .style("stroke", "lightgrey")
+            .style("stroke-opacity", 0.5)
+            .attr("fill-opacity", 0);
     }
 
     setupBrush();
 }
 
-function setupBrush(){
+function setupBrush() {
     brush = d3.brush()
         .extent([
-            [0,0],
+            [0, 0],
             [600, 900]
         ])
         .on("brush end", (event) => { // TODO: check if 'brush end' is doable with all changes in plots
@@ -297,7 +302,7 @@ function setupBrush(){
                 console.log("No selection");
                 changeGrassColor(ctx.grassGreen);
                 for (pos_title of Object.keys(ctx.playerPositions)) {
-                    d3.select("#position-" + pos_title).attr("opacity", 0);
+                    d3.select("#position-" + pos_title).attr("fill-opacity", 0);
                 }
             } else {
                 console.log("Selection: " + event.selection);
@@ -305,10 +310,10 @@ function setupBrush(){
                 pos_list = findPlayerPositions(event.selection);
                 for (pos_title of Object.keys(ctx.playerPositions)) {
                     if (pos_list.includes(pos_title)) {
-                        d3.select("#position-" + pos_title).attr("opacity", 0.6);
+                        d3.select("#position-" + pos_title).attr("fill-opacity", 0.6);
                     } else {
-                        d3.select("#position-" + pos_title).attr("opacity", 0);
-                    } 
+                        d3.select("#position-" + pos_title).attr("fill-opacity", 0);
+                    }
                 }
             }
             ctx.SELECTION = event.selection;
@@ -323,7 +328,7 @@ function changeGrassColor(color) {
 
 //---------------------------------------------------------------------------------------------------------
 
-function initBestPlayerList(playerList){
+function initBestPlayerList(playerList) {
     let listGroup = d3.select("#bestPlayerListG");
     listGroup.attr("transform", "translate(655, 100)");
     let bestPlayers = playerList.sort((a, b) => b.overall - a.overall).slice(0, 10);
@@ -366,7 +371,7 @@ function initBestPlayerList(playerList){
     });
 }
 
-function updateBestPlayerList(playerList){
+function updateBestPlayerList(playerList) {
     let bestPlayers = playerList.sort((a, b) => b.overall - a.overall).slice(0, 10);
     bestPlayerButtons = d3.select("#bestPlayerListG").selectAll("g").data(bestPlayers).join(
         enter => console.log("enter"),
@@ -387,11 +392,14 @@ function updateBestPlayerList(playerList){
 //---------------------------------------------------------------------------------------------------------
 //---------------------------------------------STATS RADAR-------------------------------------------------
 
-function summaryStats(playerList){
+function summaryStats(playerList) {
     // compute median, 25th and 75th percentile, min and max for each relevant feature
-    let features = ["pace","shooting","passing","dribbling","defending","physic"];
+    let features = ["pace", "shooting", "passing", "dribbling", "defending", "physic"];
+    let features_nice_names = ["Pace", "Shooting", "Passing", "Dribbling", "Defending", "Physic"];
+    let gk_features = ["gk_diving", "gk_handling", "gk_kicking", "gk_reflexes", "gk_speed", "gk_positioning"];
+    let gk_features_nice_names = ["Diving", "Handling", "Kicking", "Reflexes", "Speed", "Positioning"];
     // filter for top 100 players
-    playerList = playerList.sort((a, b) => b.overall - a.overall).slice(0, 50);
+    playerList = playerList.sort((a, b) => b.overall - a.overall).slice(0, 100);
     let statsList = ["max", "q3", "median", "q1", "min"];
     let stats = {};
     for (let stat of statsList) {
@@ -399,22 +407,23 @@ function summaryStats(playerList){
     }
     for (let feature of features) {
         let values = playerList.map(d => parseFloat(d[feature]));
+        let nice_feature = features_nice_names[features.indexOf(feature)];
         values.sort((a, b) => a - b);
-        stats["median"].push({axis: feature, value: d3.median(values)});
-        stats["min"].push({axis: feature, value: d3.min(values)});
-        stats["max"].push({axis: feature, value: d3.max(values)});
-        stats["q1"].push({axis: feature, value: d3.quantile(values, 0.25)});
-        stats["q3"].push({axis: feature, value: d3.quantile(values, 0.75)});
+        stats["median"].push({ axis: nice_feature, value: d3.median(values) });
+        stats["min"].push({ axis: nice_feature, value: d3.min(values) });
+        stats["max"].push({ axis: nice_feature, value: d3.max(values) });
+        stats["q1"].push({ axis: nice_feature, value: d3.quantile(values, 0.25) });
+        stats["q3"].push({ axis: nice_feature, value: d3.quantile(values, 0.75) });
     }
     // stats = Object.values(stats)
     let orderedStats = new Array();
     for (let stat of statsList) {
-        orderedStats.push({"name": stat, "values": stats[stat]});
+        orderedStats.push({ "name": stat, "values": stats[stat] });
     }
     return orderedStats;
 }
 
-function groupStatsRadar(data){
+function groupStatsRadar(data) {
     let cfg = {
         x: 850,
         y: 750,
@@ -433,11 +442,11 @@ function groupStatsRadar(data){
         roundStrokes: true
     };
 
-    createRadar("statsG","rootG", data, cfg);
+    createRadar("statsG", "rootG", data, cfg);
 
 }
 
-function playerStatsRadar(data){
+function playerStatsRadar(data) {
     let cfg = {
         x: 625,
         y: 265,
@@ -456,15 +465,15 @@ function playerStatsRadar(data){
         roundStrokes: true
     };
 
-    createRadar("playerStatsG","playerDetailG", data, cfg);
+    createRadar("playerStatsG", "playerDetailG", data, cfg);
 
 }
 
-function createRadar(id, rootId, playerList, cfg){
-    if(document.getElementById(id) != null){
+function createRadar(id, rootId, playerList, cfg) {
+    if (document.getElementById(id) != null) {
         document.getElementById(id).remove();
     }
-    
+
     // let cfg = {
     //     x: 850,
     //     y: 700,
@@ -485,29 +494,29 @@ function createRadar(id, rootId, playerList, cfg){
 
     // let allAxis = [findAxis(playerList)];
     let allAxis = summaryStats(playerList);
-    let axisNames = (allAxis[0]["values"].map(function(i, j){return i.axis}));	//names of each axis
+    let axisNames = (allAxis[0]["values"].map(function (i, j) { return i.axis }));	//names of each axis
     let total = axisNames.length;					//total number of different axes
-    let radius = Math.min(cfg.w/2, cfg.h/2); 	//radius of the outermost circle
+    let radius = Math.min(cfg.w / 2, cfg.h / 2); 	//radius of the outermost circle
     let angleSlice = Math.PI * 2 / total;		//width in radians of each "slice"
-    
+
     //radius scale
     let radiusScale = d3.scaleLinear()
-    .range([0, radius])
-    .domain([0, 100]);
-    
-    let statsRadar = d3.select("#"+rootId)
-                        .append("g")
-                        .attr("id", id);
-    
-    
+        .range([0, radius])
+        .domain([0, 100]);
+
+    let statsRadar = d3.select("#" + rootId)
+        .append("g")
+        .attr("id", id);
+
+
     statsRadar.attr("transform", `translate(${cfg.x}, ${cfg.y})`);
-    
+
     // circular grid
     //wrapper for the grid & axes
     let axisGrid = statsRadar.append("g").attr("class", "axisWrapper");
-    
+
     //draw the background circles
-    axisGrid.selectAll(".levels")
+    /*axisGrid.selectAll(".levels")
         .data(d3.range(1,(cfg.levels+1)).reverse())
         .enter()
         .append("circle")
@@ -516,19 +525,19 @@ function createRadar(id, rootId, playerList, cfg){
         .style("fill", "#CDCDCD")
         .style("stroke", "#CDCDCD")
         .style("fill-opacity", cfg.opacityCircles)
-        .style("filter" , "url(#glow)");
+        .style("filter" , "url(#glow)");*/
 
     //show percentage of each level
-	axisGrid.selectAll(".axisLabel")
-        .data(d3.range(1,(cfg.levels+1)).reverse())
+    axisGrid.selectAll(".axisLabel")
+        .data(d3.range(1, (cfg.levels + 1)).reverse())
         .enter().append("text")
         .attr("class", "axisLabel")
         .attr("x", 4)
-        .attr("y", function(d){return -d*radius/cfg.levels;})
+        .attr("y", function (d) { return -d * radius / cfg.levels; })
         .attr("dy", "0.4em")
         .style("font-size", "10px")
         .attr("fill", "#FFFFFF")
-        .text(function(d,i) { return (cfg.maxValue * d/cfg.levels).toFixed(0); });
+        .text(function (d, i) { return (cfg.maxValue * d / cfg.levels).toFixed(0); });
 
     //straight line axes radiating outward from the center
     let axis = axisGrid.selectAll(".axis")
@@ -536,38 +545,38 @@ function createRadar(id, rootId, playerList, cfg){
         .enter()
         .append("g")
         .attr("class", "axis");
-    
+
     //append axes
     axis.append("line")
         .attr("x1", 0)
         .attr("y1", 0)
-        .attr("x2", function(d, i){ return radiusScale(cfg.maxValue*1.1) * Math.cos(angleSlice*i - Math.PI/2); })
-        .attr("y2", function(d, i){ return radiusScale(cfg.maxValue*1.1) * Math.sin(angleSlice*i - Math.PI/2); })
+        .attr("x2", function (d, i) { return radiusScale(cfg.maxValue * 1.1) * Math.cos(angleSlice * i - Math.PI / 2); })
+        .attr("y2", function (d, i) { return radiusScale(cfg.maxValue * 1.1) * Math.sin(angleSlice * i - Math.PI / 2); })
         .attr("class", "line")
         .style("stroke", "white")
         .style("stroke-width", "2px");
 
     //append the labels of each axis
-	axis.append("text")
+    axis.append("text")
         .attr("class", "legend")
         .style("font-size", "11px")
         .attr("text-anchor", "middle")
         .attr("fill", "#FFFFFF")
         .attr("dy", "0.35em")
-        .attr("x", function(d, i){ return radiusScale(cfg.maxValue * cfg.labelFactor) * Math.cos(angleSlice*i - Math.PI/2); })
-        .attr("y", function(d, i){ return radiusScale(cfg.maxValue * cfg.labelFactor) * Math.sin(angleSlice*i - Math.PI/2); })
-        .text(string => {return string.charAt(0).toUpperCase() + string.slice(1)});
-    
+        .attr("x", function (d, i) { return radiusScale(cfg.maxValue * cfg.labelFactor) * Math.cos(angleSlice * i - Math.PI / 2); })
+        .attr("y", function (d, i) { return radiusScale(cfg.maxValue * cfg.labelFactor) * Math.sin(angleSlice * i - Math.PI / 2); })
+        .text(string => { return string.charAt(0).toUpperCase() + string.slice(1) });
+
     // radar chart blobs
-	// radial line function
-	var radarLine = d3.lineRadial()
-        .radius(function(d) { return radiusScale(d.value); })
-        .angle(function(d,i) {	return i*angleSlice; });
-    
-    if(cfg.roundStrokes) {
+    // radial line function
+    var radarLine = d3.lineRadial()
+        .radius(function (d) { return radiusScale(d.value); })
+        .angle(function (d, i) { return i * angleSlice; });
+
+    if (cfg.roundStrokes) {
         radarLine.curve(d3.curveLinearClosed);
     }
-                
+
     //wrapper for the blobs	
     var blobWrapper = statsRadar.selectAll(".radarWrapper")
         .data(allAxis)
@@ -575,13 +584,13 @@ function createRadar(id, rootId, playerList, cfg){
         .attr("class", "radarWrapper");
 
     blobWrapper.append("title")
-        .text(function(d, i) { return d.name; });
+        .text(function (d, i) { return d.name; });
 
     //append backgrounds	
     blobWrapper.append("path")
         .attr("class", "radarArea")
-        .attr("d", function(d,i) { return radarLine(d.values); })
-        .style("fill", function(d,i) {
+        .attr("d", function (d, i) { return radarLine(d.values); })
+        .style("fill", function (d, i) {
             if (["q1", "median", "q3"].includes(d.name)) {
                 return cfg.color(i);
             } else {
@@ -589,17 +598,17 @@ function createRadar(id, rootId, playerList, cfg){
             }
         })
         .style("fill-opacity", cfg.opacityArea)
-        .on('mouseover', function (d,i){
+        .on('mouseover', function (d, i) {
             //Dim all blobs
             d3.selectAll(".radarArea")
                 .transition().duration(200)
-                .style("fill-opacity", 0.1); 
+                .style("fill-opacity", 0.1);
             //Bring back the hovered over blob
             d3.select(this)
                 .transition().duration(200)
                 .style("fill-opacity", 0.7);
         })
-        .on('mouseout', function(){
+        .on('mouseout', function () {
             //Bring back all blobs
             d3.selectAll(".radarArea")
                 .transition().duration(200)
@@ -607,11 +616,11 @@ function createRadar(id, rootId, playerList, cfg){
         });
 
     //outlines	
-	blobWrapper.append("path")
+    blobWrapper.append("path")
         .attr("class", "radarStroke")
-        .attr("d", function(d,i) { return radarLine(d.values); })
+        .attr("d", function (d, i) { return radarLine(d.values); })
         .style("stroke-width", cfg.strokeWidth + "px")
-        .style("stroke", function(d,i) {
+        .style("stroke", function (d, i) {
             if (["min", "max"].includes(d.name)) {
                 return cfg.color(i);
             } else {
@@ -619,7 +628,7 @@ function createRadar(id, rootId, playerList, cfg){
             }
         })
         .style("fill", "none")
-        .style("filter" , "url(#glow)");
+        .style("filter", "url(#glow)");
     /*
     //append the circles
     blobWrapper.selectAll(".radarCircle")
@@ -632,7 +641,7 @@ function createRadar(id, rootId, playerList, cfg){
         .style("fill", function(d,i,j) { return cfg.color(j); })
         .style("fill-opacity", 0.8);
     */
-    
+
 }
 
 //---------------------------------------------------------------------------------------------------------
@@ -640,23 +649,23 @@ function createRadar(id, rootId, playerList, cfg){
 // player detail view
 
 const statDicts = {
-    attacking_stats: {"Crossing": "attacking_crossing", "Finishing": "attacking_finishing", "Heading Accuracy": "attacking_heading_accuracy", "Short Passing": "attacking_short_passing", "Volleys": "attacking_volleys"},
-    skill_stats: {"Dribbling": "skill_dribbling", "Curve": "skill_curve", "FK Accuracy": "skill_fk_accuracy", "Long Passing": "skill_long_passing", "Ball Control": "skill_ball_control"},
-    movement_stats: {"Acceleration": "movement_acceleration", "Sprint Speed": "movement_sprint_speed", "Agility": "movement_agility", "Reactions": "movement_reactions", "Balance": "movement_balance"},
-    power_stats: {"Shot Power": "power_shot_power", "Jumping": "power_jumping", "Stamina": "power_stamina", "Strength": "power_strength", "Long Shots": "power_long_shots"},
-    mentality_stats: {"Aggression": "mentality_aggression", "Interceptions": "mentality_interceptions", "Positioning": "mentality_positioning", "Vision": "mentality_vision", "Penalties": "mentality_penalties", "Composure": "mentality_composure"},
-    defending_stats: {"Marking": "defending_marking_awareness", "Standing Tackle": "defending_standing_tackle", "Sliding Tackle": "defending_sliding_tackle"},
-    goalkeeping_stats: {"Diving": "goalkeeping_diving", "Handling": "goalkeeping_handling", "Kicking": "goalkeeping_kicking", "Positioning": "goalkeeping_positioning", "Reflexes": "goalkeeping_reflexes", "Speed": "goalkeeping_speed"},
+    attacking_stats: { "Crossing": "attacking_crossing", "Finishing": "attacking_finishing", "Heading Accuracy": "attacking_heading_accuracy", "Short Passing": "attacking_short_passing", "Volleys": "attacking_volleys" },
+    skill_stats: { "Dribbling": "skill_dribbling", "Curve": "skill_curve", "FK Accuracy": "skill_fk_accuracy", "Long Passing": "skill_long_passing", "Ball Control": "skill_ball_control" },
+    movement_stats: { "Acceleration": "movement_acceleration", "Sprint Speed": "movement_sprint_speed", "Agility": "movement_agility", "Reactions": "movement_reactions", "Balance": "movement_balance" },
+    power_stats: { "Shot Power": "power_shot_power", "Jumping": "power_jumping", "Stamina": "power_stamina", "Strength": "power_strength", "Long Shots": "power_long_shots" },
+    mentality_stats: { "Aggression": "mentality_aggression", "Interceptions": "mentality_interceptions", "Positioning": "mentality_positioning", "Vision": "mentality_vision", "Penalties": "mentality_penalties", "Composure": "mentality_composure" },
+    defending_stats: { "Marking": "defending_marking_awareness", "Standing Tackle": "defending_standing_tackle", "Sliding Tackle": "defending_sliding_tackle" },
+    goalkeeping_stats: { "Diving": "goalkeeping_diving", "Handling": "goalkeeping_handling", "Kicking": "goalkeeping_kicking", "Positioning": "goalkeeping_positioning", "Reflexes": "goalkeeping_reflexes", "Speed": "goalkeeping_speed" },
 }
 
-function initPlayerDetailView(){
+function initPlayerDetailView() {
     let playerDetailG = d3.select("#playerDetailG");
     playerDetailG.attr("transform", "translate(1100, 100)");
     playerDetailG.append("rect")
         .attr("width", 750)
         .attr("height", 900)
         .attr("fill", "#6C8289");
-    
+
     playerDetailG.append("text")
         .attr("id", "playerName")
         .attr("x", 10)
@@ -665,7 +674,7 @@ function initPlayerDetailView(){
         .attr("font-weight", "bold")
         .attr("fill", "#18414e")
         .text("Player Name");
-    
+
     playerDetailG.append("text")
         .attr("id", "playerTeam")
         .attr("x", 10)
@@ -682,7 +691,7 @@ function initPlayerDetailView(){
         .attr("fill", "#18414e")
         .attr("text-anchor", "end")
         .text("Nationality");
-    
+
     playerDetailG.append("text")
         .attr("id", "playerPosition")
         .attr("x", 740)
@@ -714,7 +723,7 @@ function initPlayerDetailView(){
         .attr("height", 150)
         .attr("anchor", "middle")
         .attr("xlink:href", "https://cdn.sofifa.net/players/notfound_0_120.png");
-    
+
     playerDetailG.append("image")
         .attr("id", "clubFlag")
         .attr("x", 275)
@@ -722,7 +731,7 @@ function initPlayerDetailView(){
         .attr("width", 40)
         .attr("height", 40)
         .attr("xlink:href", "https://cdn.sofifa.net/teams/21/60.png");
-    
+
     playerDetailG.append("image")
         .attr("id", "nationalFlag")
         .attr("x", 435)
@@ -736,7 +745,7 @@ function initPlayerDetailView(){
         .attr("cy", 150)
         .attr("r", 40)
         .attr("fill", "#6C8289");
-    
+
     playerDetailG.append("text")
         .attr("id", "playerOverall")
         .attr("x", 375)
@@ -746,7 +755,7 @@ function initPlayerDetailView(){
         .attr("fill", "#18414e")
         .attr("text-anchor", "middle")
         .text("OVR");
-    
+
     playerDetailG.append("text")
         .attr("id", "playerAge")
         .attr("x", 10)
@@ -754,7 +763,7 @@ function initPlayerDetailView(){
         .attr("font-size", 20)
         .attr("fill", "#18414e")
         .text("Age");
-    
+
     playerDetailG.append("text")
         .attr("id", "playerHeight")
         .attr("x", 10)
@@ -762,7 +771,7 @@ function initPlayerDetailView(){
         .attr("font-size", 20)
         .attr("fill", "#18414e")
         .text("Height");
-    
+
     playerDetailG.append("text")
         .attr("id", "playerWeight")
         .attr("x", 10)
@@ -770,7 +779,7 @@ function initPlayerDetailView(){
         .attr("font-size", 20)
         .attr("fill", "#18414e")
         .text("Weight");
-    
+
     playerDetailG.append("text")
         .attr("id", "playerValue")
         .attr("x", 10)
@@ -778,7 +787,7 @@ function initPlayerDetailView(){
         .attr("font-size", 20)
         .attr("fill", "#18414e")
         .text("Value");
-    
+
     playerDetailG.append("text")
         .attr("id", "playerWage")
         .attr("x", 10)
@@ -786,11 +795,11 @@ function initPlayerDetailView(){
         .attr("font-size", 20)
         .attr("fill", "#18414e")
         .text("Wage");
-    
+
     playerDetailG.append("g")
         .attr("id", "attackingStats")
         .attr("transform", "translate(0, 420)");
-    
+
     let attackingStats = d3.select("#attackingStats");
 
     attackingStats.append("text")
@@ -800,9 +809,9 @@ function initPlayerDetailView(){
         .attr("font-weight", "bold")
         .attr("fill", "#18414e")
         .text("Attacking");
-    
+
     i = 0;
-    for (let [key, value] of Object.entries(statDicts.attacking_stats)){
+    for (let [key, value] of Object.entries(statDicts.attacking_stats)) {
         initPlayerStatDetailBar(10, i * 40 + 25, attackingStats, key, value, 0);
         i++;
     }
@@ -810,16 +819,16 @@ function initPlayerDetailView(){
     playerDetailG.append("g")
         .attr("id", "skillStats")
         .attr("transform", "translate(0, 660)");
-    
+
     let skillStats = d3.select("#skillStats");
 
     skillStats.append("text")
-    .attr("x", 10)
-    .attr("y", 0)
-    .attr("font-size", 15)
-    .attr("font-weight", "bold")
-    .attr("fill", "#18414e")
-    .text("Skills");
+        .attr("x", 10)
+        .attr("y", 0)
+        .attr("font-size", 15)
+        .attr("font-weight", "bold")
+        .attr("fill", "#18414e")
+        .text("Skills");
 
     for (let i = 0; i < 5; i++) {
         initPlayerStatDetailBar(10, i * 40 + 25, skillStats, Object.keys(statDicts.skill_stats)[i], Object.values(statDicts.skill_stats)[i], 0);
@@ -828,7 +837,7 @@ function initPlayerDetailView(){
     playerDetailG.append("g")
         .attr("id", "movementStats")
         .attr("transform", "translate(187.5, 420)");
-    
+
     let movementStats = d3.select("#movementStats");
 
     movementStats.append("text")
@@ -846,7 +855,7 @@ function initPlayerDetailView(){
     playerDetailG.append("g")
         .attr("id", "powerStats")
         .attr("transform", "translate(187.5, 660)");
-    
+
     let powerStats = d3.select("#powerStats");
 
     powerStats.append("text")
@@ -864,7 +873,7 @@ function initPlayerDetailView(){
     playerDetailG.append("g")
         .attr("id", "mentalityStats")
         .attr("transform", "translate(375, 420)");
-    
+
     let mentalityStats = d3.select("#mentalityStats");
 
     mentalityStats.append("text")
@@ -882,7 +891,7 @@ function initPlayerDetailView(){
     playerDetailG.append("g")
         .attr("id", "defendingStats")
         .attr("transform", "translate(375, 700)");
-    
+
     let defendingStats = d3.select("#defendingStats");
 
     defendingStats.append("text")
@@ -892,7 +901,7 @@ function initPlayerDetailView(){
         .attr("font-weight", "bold")
         .attr("fill", "#18414e")
         .text("Defending");
-    
+
     for (let i = 0; i < 3; i++) {
         initPlayerStatDetailBar(10, i * 40 + 25, defendingStats, Object.keys(statDicts.defending_stats)[i], Object.values(statDicts.defending_stats)[i], 0);
     }
@@ -900,7 +909,7 @@ function initPlayerDetailView(){
     playerDetailG.append("g")
         .attr("id", "goalkeepingStats")
         .attr("transform", "translate(562.5, 420)");
-    
+
     let goalkeepingStats = d3.select("#goalkeepingStats");
 
     goalkeepingStats.append("text")
@@ -910,13 +919,13 @@ function initPlayerDetailView(){
         .attr("font-weight", "bold")
         .attr("fill", "#18414e")
         .text("Goalkeeping");
-    
+
     for (let i = 0; i < 6; i++) {
         initPlayerStatDetailBar(10, i * 40 + 25, goalkeepingStats, Object.keys(statDicts.goalkeeping_stats)[i], Object.values(statDicts.goalkeeping_stats)[i], 0);
     }
 }
 
-function updatePlayerDetailView(player){
+function updatePlayerDetailView(player) {
     d3.select("#playerName").text(player.short_name);
     d3.select("#playerTeam").text(player.club_name);
     d3.select("#playerNationality").text(player.nationality_name);
@@ -936,61 +945,155 @@ function updatePlayerDetailView(player){
     }
 }
 
-function initPlayerStatDetailBar(x, y, g, name, attr_name, value){
+function initPlayerStatDetailBar(x, y, G, name, attr_name, value) {
     let statScale = d3.scaleLinear()
-        .domain([0,100])
-        .range([0,160]);
-    
+        .domain([0, 100])
+        .range([0, 160]);
+
+    g = G.append("g")
+        .attr("id", "detailG" + attr_name)
+        .attr("transform", "translate(" + x + "," + y + ")");
+
     g.append("text")
-        .attr("x", x)
-        .attr("y", y)
+        .attr("x", 0)
+        .attr("y", 0)
         .attr("font-size", 15)
         .attr("fill", "#18414e")
         .text(name);
 
     g.append("text")
         .attr("id", "PlayerAttributeVal_" + attr_name)
-        .attr("x", x + 160)
-        .attr("y", y)
+        .attr("x", 0 + 160)
+        .attr("y", 0)
         .attr("font-size", 15)
         .attr("text-anchor", "end")
         .attr("fill", "#18414e")
         .text(value);
-    
+
     g.append("rect")
-        .attr("x", x)
-        .attr("y", y + 5)
+        .attr("x", 0)
+        .attr("y", 0 + 5)
         .attr("width", 160)
         .attr("height", 10)
         .attr("fill", "#18414e");
-    
+
     g.append("rect")
-        .attr("id", "PlayerAttribute_"+attr_name)
-        .attr("x", x - 1)
-        .attr("y", y + 4)
+        .attr("id", "PlayerAttribute_" + attr_name)
+        .attr("x", - 1)
+        .attr("y", 4)
         .attr("width", statScale(value) + 1)
         .attr("height", 12)
         .attr("fill", "#6C8289");
-    
+
+    g.append("rect")
+        .attr("x", -1)
+        .attr("y", -1)
+        .attr("width", 162)
+        .attr("height", 18)
+        .attr("fill-opacity", 0)
+        .on("mouseenter", function() {
+            detailG = G.append("g")
+                .attr("id", "detailG" + attr_name + "Text")
+                .attr("transform", "translate(" + (x-1) + "," + (y - 120) + ")");
+            detailG.append("rect")
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("width", 162)
+                .attr("height", 100)
+                .attr("fill", "lightblue");
+            densityPlot(ctx.currentDataSelection, attr_name, detailG, 160, 100);
+        })
+        .on("mouseout", function() {
+            d3.select("#detailG" + attr_name + "Text").remove();
+        });
+
 }
 
-function updatePlayerStatDetailBars(names, player){
+function updatePlayerStatDetailBars(names, player) {
     let statScale = d3.scaleLinear()
-        .domain([0,100])
-        .range([0,160]);
-    
+        .domain([0, 100])
+        .range([0, 160]);
+
     let colorScale = d3.scaleLinear()
-        .domain([0,50,100])
-        .range(["maroon","goldenrod","ForestGreen"]);
-    
+        .domain([0, 50, 100])
+        .range(["maroon", "goldenrod", "ForestGreen"]);
+
     for (let i = 0; i < names.length; i++) {
         let value = player[names[i]];
-        d3.select("#PlayerAttribute_"+names[i])
+        d3.select("#PlayerAttribute_" + names[i])
             .transition()
             .duration(1000)
             .attr("width", statScale(value) + 1)
             .attr("fill", colorScale(value));
-        d3.select("#PlayerAttributeVal_"+names[i])
+        d3.select("#PlayerAttributeVal_" + names[i])
             .text(value);
     }
+}
+
+function attributeHistory(playerId, attribute) {
+    let attributeHistory = [];
+    // add values of attribute for the player with playerId to attributeHistory
+    for (let i = 2015; i < 2023; i++) {
+        let data = ctx.playersPerYear[i];
+        for (let j = 0; j < data.length; j++) {
+            if (data[j].player_id == playerId) {
+                attributeHistory.push(data[j][attribute]);
+                break;
+            }
+        }
+        attributeHistory.push(null);
+    }
+    return attributeHistory;
+}
+
+function densityPlot(data, attribute, g, width, height) {
+    let xScale = d3.scaleLinear()
+        .domain([0, 100])
+        .range([0, width]);
+    density = attributeDensity(data, attribute, xScale);
+    console.log(density);
+    let yScale = d3.scaleLinear()
+        .domain([0, d3.max(density, (d) => d[1])])
+        .range([height, 0]);
+    console.log(yScale.domain(), yScale.range(), xScale.domain(), xScale.range());
+    
+    density = density.map(d => {
+        if (d[0] == 0 || d[0] == 100) {
+            return [d[0], 0];
+        } else {
+            return d;
+        }
+    });
+    
+    g.append("path")
+        .datum(density)
+        .attr("fill", "#18414e")
+        .attr("fill-opacity", 1)
+        .attr("stroke", "#18414e")
+        .attr("stroke-width", 1.5)
+        .attr("stroke-linejoin", "round")
+        .attr("d", d3.line()
+            .curve(d3.curveBasis)
+            .x((d) => { return xScale(d[0]); })
+            .y((d) => { return yScale(d[1]); }));
+}
+
+function attributeDensity(data, attribute, scale) {
+    let attributeValues = data.map(d => d[attribute]);
+    density = kernelDensityEstimator(kernelEpanechnikov(7), scale.ticks(22))(attributeValues);
+    return density;
+}
+
+function kernelDensityEstimator(kernel, X) {
+    return function (V) {
+        return X.map(function (x) {
+            return [x, d3.mean(V, function (v) { return kernel(x - v); })];
+        });
+    };
+}
+
+function kernelEpanechnikov(k) {
+    return function (v) {
+        return Math.abs(v /= k) <= 1 ? 0.75 * (1 - v * v) / k : 0;
+    };
 }
