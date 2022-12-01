@@ -951,7 +951,7 @@ function initPlayerStatDetailBar(x, y, G, name, attr_name, value) {
         .range([0, 160]);
 
     g = G.append("g")
-        .attr("id", "detailG" + attr_name)
+        .attr("id", "statDetailG_" + attr_name)
         .attr("transform", "translate(" + x + "," + y + ")");
 
     g.append("text")
@@ -986,30 +986,15 @@ function initPlayerStatDetailBar(x, y, G, name, attr_name, value) {
         .attr("fill", "#6C8289");
 
     g.append("rect")
+        .attr("id", "PlayerAttribute_" + attr_name + "_overlay")
         .attr("x", -1)
-        .attr("y", -1)
+        .attr("y", -15)
         .attr("width", 162)
-        .attr("height", 18)
-        .attr("fill-opacity", 0)
-        .on("mouseenter", function() {
-            detailG = G.append("g")
-                .attr("id", "detailG" + attr_name + "Text")
-                .attr("transform", "translate(" + (x-1) + "," + (y - 120) + ")");
-            detailG.append("rect")
-                .attr("x", 0)
-                .attr("y", 0)
-                .attr("width", 162)
-                .attr("height", 100)
-                .attr("fill", "lightblue");
-            densityPlot(ctx.currentDataSelection, attr_name, detailG, 160, 100);
-        })
-        .on("mouseout", function() {
-            d3.select("#detailG" + attr_name + "Text").remove();
-        });
-
+        .attr("height", 30)
+        .attr("fill-opacity", 0);
 }
 
-function updatePlayerStatDetailBars(names, player) {
+function updatePlayerStatDetailBars(attr_names, player) {
     let statScale = d3.scaleLinear()
         .domain([0, 100])
         .range([0, 160]);
@@ -1018,16 +1003,81 @@ function updatePlayerStatDetailBars(names, player) {
         .domain([0, 50, 100])
         .range(["maroon", "goldenrod", "ForestGreen"]);
 
-    for (let i = 0; i < names.length; i++) {
-        let value = player[names[i]];
-        d3.select("#PlayerAttribute_" + names[i])
+    for (let i = 0; i < attr_names.length; i++) {
+        let value = player[attr_names[i]];
+        d3.select("#PlayerAttribute_" + attr_names[i])
             .transition()
             .duration(1000)
             .attr("width", statScale(value) + 1)
             .attr("fill", colorScale(value));
-        d3.select("#PlayerAttributeVal_" + names[i])
+        d3.select("#PlayerAttributeVal_" + attr_names[i])
             .text(value);
+        d3.select("#PlayerAttribute_" + attr_names[i] + "_overlay")
+            .on("mouseenter", function () {
+                detailG = d3.select("#statDetailG_" + attr_names[i]).append("g")
+                    .attr("id", "detailG_" + attr_names[i] + "Text")
+                    .attr("transform", "translate(" + (-1) + "," + (- 120) + ")");
+                detailG.append("rect")
+                    .attr("x", 0)
+                    .attr("y", 0)
+                    .attr("width", 162)
+                    .attr("height", 100)
+                    .attr("fill", "#18414e");
+                attributeHistoryG = detailG.append("g")
+                    .attr("transform", "translate(0, 50)");
+                densityPlot(ctx.currentDataSelection, attr_names[i], detailG, 160, 50, player[attr_names[i]]);
+                attributeHistoryPlot(player, attr_names[i], attributeHistoryG, 160, 50);
+            })
+            .on("mouseout", function () {
+                d3.select("#detailG_" + attr_names[i] + "Text").remove();
+            });
     }
+}
+
+function attributeHistoryPlot(player, attr, G, width, height) {
+    G.append("text")
+        .attr("x", 2)
+        .attr("y", 12)
+        .attr("font-size", 10)
+        .attr("fill", "lightblue")
+        .text("Attribute History over Years");
+    let currentYear = player.year;
+    let playerId = player.sofifa_id;
+    let history = attributeHistory(playerId, attr);
+    history = history.filter(function (d) {
+        return d != null;
+    });
+    console.log(history);
+    let history_min = d3.min(history, d => {
+        return d[1];
+    });
+    let history_max = d3.max(history, d => {
+        return d[1];
+    });
+    let xScale = d3.scaleLinear()
+        .domain([2015, 2022])
+        .range([0, width]);
+    
+    let yScale = d3.scaleLinear()
+        .domain([history_min, history_max])
+        .range([height - 5, 20]);
+    
+    let line = d3.line()
+        .x(d => xScale(d[0]))
+        .y(d => yScale(d[1]));
+    
+    G.append("path")
+        .datum(history)
+        .attr("d", line)
+        .attr("fill", "none")
+        .attr("stroke", "lightblue")
+        .attr("stroke-width", 2);
+    
+    G.append("circle")
+        .attr("cx", xScale(currentYear))
+        .attr("cy", yScale(player[attr]))
+        .attr("r", 2)
+        .attr("fill", "red");
 }
 
 function attributeHistory(playerId, attribute) {
@@ -1036,27 +1086,34 @@ function attributeHistory(playerId, attribute) {
     for (let i = 2015; i < 2023; i++) {
         let data = ctx.playersPerYear[i];
         for (let j = 0; j < data.length; j++) {
-            if (data[j].player_id == playerId) {
-                attributeHistory.push(data[j][attribute]);
+            found = false;
+            if (data[j].sofifa_id == playerId) {
+                attributeHistory.push([i,parseInt(data[j][attribute])]);
+                found = true;
                 break;
             }
         }
-        attributeHistory.push(null);
+        if (!found) {
+            attributeHistory.push(null);
+        }
     }
     return attributeHistory;
 }
 
-function densityPlot(data, attribute, g, width, height) {
+function densityPlot(data, attribute, g, width, height, playerValue) {
+    g.append("text")
+        .attr("x", 2)
+        .attr("y", 12)
+        .attr("font-size", 10)
+        .attr("fill", "lightblue")
+        .text("Comparison to selected group");
     let xScale = d3.scaleLinear()
         .domain([0, 100])
         .range([0, width]);
     density = attributeDensity(data, attribute, xScale);
-    console.log(density);
     let yScale = d3.scaleLinear()
         .domain([0, d3.max(density, (d) => d[1])])
-        .range([height, 0]);
-    console.log(yScale.domain(), yScale.range(), xScale.domain(), xScale.range());
-    
+        .range([height, 15]);
     density = density.map(d => {
         if (d[0] == 0 || d[0] == 100) {
             return [d[0], 0];
@@ -1064,18 +1121,25 @@ function densityPlot(data, attribute, g, width, height) {
             return d;
         }
     });
-    
+
     g.append("path")
         .datum(density)
-        .attr("fill", "#18414e")
+        .attr("fill", "lightblue")
         .attr("fill-opacity", 1)
-        .attr("stroke", "#18414e")
+        .attr("stroke", "lightblue")
         .attr("stroke-width", 1.5)
         .attr("stroke-linejoin", "round")
         .attr("d", d3.line()
             .curve(d3.curveBasis)
             .x((d) => { return xScale(d[0]); })
             .y((d) => { return yScale(d[1]); }));
+
+    g.append("rect")
+        .attr("x", xScale(playerValue))
+        .attr("y", 15)
+        .attr("width", 1)
+        .attr("height", height - 15)
+        .attr("fill", "red");
 }
 
 function attributeDensity(data, attribute, scale) {
