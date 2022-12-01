@@ -1168,56 +1168,6 @@ function kernelEpanechnikov(k) {
 
 //---------------------------------------------------------------------------------------------------------
 
-// players comparison
-
-// function playerSelector(playerList){
-//     console.log(playerList.length);
-//     document.getElementById("playerSelectorFrame").style.display = "block";
-//     // let playersComparisonG = d3.select("#playersConmparisonG");
-//     // playersComparisonG.attr("transform", "translate(700, 1050)");        
-//     let allGroup = ["valueA", "valueB", "valueC","valueA", "valueB", "valueC","valueA", "valueB", "valueC","valueA", "valueB", "valueC","valueA", "valueB", "valueC"]
-    
-//     var dragcontainer = d3.drag()
-//         .on("drag", function(d, i) {
-//             d3.select(this).attr("transform", "translate(" + (d.x = d.x) + "," + (d.y = d3.event.y) + ")");
-//         });
-
-//     let playerSelector = d3.select("#playerSelectorFrame")
-//         .style("position", "fixed")
-//         .append("svg")
-//         .attr("width", 500)
-//         .attr("height", playerList.length*50);
-//         // .style("width", "500px")
-//         // .style("height", "500px")
-//         // .attr("x",500)
-//         // .attr("y",700)
-//         // .style("top","50%")
-//         // .style("left","50%")
-//         // .style("overflow-y", "scroll");
-
-//     playerSelector.selectAll("players")
-//         .data(playerList)
-//         .enter()
-//         .append("rect")
-//         .attr("x", 0)
-//         .attr("y", (d,i) => i*50)
-//         .attr("width", 500)
-//         .attr("height", 50)
-//         .attr("fill", "#6C8289")
-//         .attr("stroke", tinycolor("#6C8289").darken(10))
-    
-//     playerSelector.selectAll("players")
-//         .data(playerList)
-//         .enter()
-//         .append("text")
-//         .attr("x", 10)
-//         .attr("y", 0)
-//         .attr("font-size", 15)
-//         .attr("font-weight", "bold")
-//         .attr("fill", "#18414e")
-//         .text(d => d.short_name);
-// }
-
 function initPlayersComparisonView(){
     let playersComparisonG = d3.select("#playersComparisonG")
     playersComparisonG.attr("transform", "translate(50,1050)")
@@ -1260,13 +1210,7 @@ function initPlayerSelector(playerList){
 
 function showPlayerDropdown(dropdownId) {
     document.getElementById(dropdownId).classList.toggle("show");
-    // document.getElementById("player1DropdownContent").classList.toggle("show");
-    // document.getElementById("player2DropdownContent").classList.toggle("show");
 }
-// function showPlayer2Dropdown() {
-//     document.getElementById("player2DropdownContent").classList.toggle("show");
-//     // document.getElementById("player1DropdownContent").classList.toggle("show");
-// }
 
 function filterFunction(dropdownId, searchId) {
     var input, filter, ul, li, a, i;
