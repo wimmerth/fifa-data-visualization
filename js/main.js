@@ -1,7 +1,7 @@
 const ctx = {
     YEAR: 2022,
     width: 1900,
-    height: 1900,
+    height: 2000,
     footballFieldLineWidth: 0.2,
     backgroundGrey: "#2b2b2b",
     grassGreen: "#338033",
@@ -1168,42 +1168,32 @@ function kernelEpanechnikov(k) {
 
 //---------------------------------------------------------------------------------------------------------
 
-function initPlayersComparisonView(){
-    let playersComparisonG = d3.select("#playersComparisonG")
-    playersComparisonG.attr("transform", "translate(50,1050)")
-    playersComparisonG.append("rect")
-        .attr("width", 1800)
-        .attr("height", 800)
-        .attr("fill", "#6C8289");
-    
-    addPlayerFace("#playersComparisonG",695,0,200,180,1);
-    addPlayerFace("#playersComparisonG",905,0,200,180,2);
-
-}
 
 
 function initPlayerSelector(playerList){
     // playerSelector(ctx.playersPerYear[ctx.YEAR]);
     let ids = ["player1DropdownContent", "player2DropdownContent"]
-    
+    d3.select(".dropdown-content a:hover")
+        .style("background-color", tinycolor("#18414e").darken(10));
+        
     for(let id in ids){
         d3.select("#"+ids[id])
         .selectAll("players")
-            .data(playerList)
-            .enter()
-            .append("a")
-            .on("click", (event, d) => {
-                console.log("Clicked on " + d.short_name);
-                showPlayerDropdown(ids[id]);
-                updatePlayerComparisonView(parseInt(id)+1, d);
-            })
-            .append("text")
-            .attr("x", 10)
-            .attr("y", 0)
-            .attr("font-size", 15)
-            .attr("font-weight", "bold")
-            .attr("font-family", "sans-serif")
-            .attr("fill", "#18414e")
+        .data(playerList)
+        .enter()
+        .append("a")
+        .on("click", (event, d) => {
+            console.log("Clicked on " + d.short_name);
+            showPlayerDropdown(ids[id]);
+            updatePlayerComparisonView(parseInt(id)+1, d);
+        })
+        .append("text")
+        .attr("x", 10)
+        .attr("y", 0)
+        .attr("font-size", 15)
+        .attr("font-weight", "bold")
+        .attr("font-family", "sans-serif")
+        .attr("fill", "#18414e")
             .text(d => d.short_name);
     }
 }
@@ -1226,6 +1216,19 @@ function filterFunction(dropdownId, searchId) {
             a[i].style.display = "none";
         }
     }
+}
+
+function initPlayersComparisonView(){
+    let playersComparisonG = d3.select("#playersComparisonG")
+    playersComparisonG.attr("transform", "translate(50,1050)")
+    playersComparisonG.append("rect")
+        .attr("width", 1800)
+        .attr("height", 900)
+        .attr("fill", "#6C8289");
+    
+    addPlayerFace("#playersComparisonG",0,50,200,180,1);
+    addPlayerFace("#playersComparisonG",0,500,200,180,2);
+
 }
 
 function addPlayerFace(rootId, x, y, w, h, playerNo){
