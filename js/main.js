@@ -29,6 +29,7 @@ function createViz(){
     rootG.append("g").attr("id","footballfieldG");
     rootG.append("g").attr("id", "bestPlayerListG");
     rootG.append("g").attr("id","playerDetailG");
+    rootG.append("g").attr("id","playersComparisonG");
     // rootG.append("g").attr("id","statsG");
 
     let background = d3.select("#bkgG");
@@ -40,6 +41,7 @@ function createViz(){
         .attr("fill", ctx.backgroundGrey);
 
     loadPlayerPositions();
+    initPlayersComparisonView(); //test
     initPlayerDetailView();
     loadData();
 }
@@ -76,6 +78,7 @@ function loadData(){
         console.log("Number of players in " + ctx.YEAR + ": " + playersPerYear[ctx.YEAR].length);
         ctx.playersPerYear = playersPerYear;
         initPlots(ctx.playersPerYear[ctx.YEAR]);
+        initPlayerSelector(ctx.playersPerYear[ctx.YEAR]); // test
     }).catch((error) => {
         console.log(error);
     });
@@ -993,4 +996,167 @@ function updatePlayerStatDetailBars(names, player){
         d3.select("#PlayerAttributeVal_"+names[i])
             .text(value);
     }
+}
+
+//---------------------------------------------------------------------------------------------------------
+
+// players comparison
+
+// function playerSelector(playerList){
+//     console.log(playerList.length);
+//     document.getElementById("playerSelectorFrame").style.display = "block";
+//     // let playersComparisonG = d3.select("#playersConmparisonG");
+//     // playersComparisonG.attr("transform", "translate(700, 1050)");        
+//     let allGroup = ["valueA", "valueB", "valueC","valueA", "valueB", "valueC","valueA", "valueB", "valueC","valueA", "valueB", "valueC","valueA", "valueB", "valueC"]
+    
+//     var dragcontainer = d3.drag()
+//         .on("drag", function(d, i) {
+//             d3.select(this).attr("transform", "translate(" + (d.x = d.x) + "," + (d.y = d3.event.y) + ")");
+//         });
+
+//     let playerSelector = d3.select("#playerSelectorFrame")
+//         .style("position", "fixed")
+//         .append("svg")
+//         .attr("width", 500)
+//         .attr("height", playerList.length*50);
+//         // .style("width", "500px")
+//         // .style("height", "500px")
+//         // .attr("x",500)
+//         // .attr("y",700)
+//         // .style("top","50%")
+//         // .style("left","50%")
+//         // .style("overflow-y", "scroll");
+
+//     playerSelector.selectAll("players")
+//         .data(playerList)
+//         .enter()
+//         .append("rect")
+//         .attr("x", 0)
+//         .attr("y", (d,i) => i*50)
+//         .attr("width", 500)
+//         .attr("height", 50)
+//         .attr("fill", "#6C8289")
+//         .attr("stroke", tinycolor("#6C8289").darken(10))
+    
+//     playerSelector.selectAll("players")
+//         .data(playerList)
+//         .enter()
+//         .append("text")
+//         .attr("x", 10)
+//         .attr("y", 0)
+//         .attr("font-size", 15)
+//         .attr("font-weight", "bold")
+//         .attr("fill", "#18414e")
+//         .text(d => d.short_name);
+// }
+
+function initPlayersComparisonView(){
+    let playersComparisonG = d3.select("#playersComparisonG")
+    playersComparisonG.attr("transform", "translate(50,1050)")
+    playersComparisonG.append("rect")
+        .attr("width", 1800)
+        .attr("height", 800)
+        .attr("fill", "#6C8289");
+    
+    addPlayerFace("#playersComparisonG",695,0,200,180,1);
+    addPlayerFace("#playersComparisonG",905,0,200,180,2);
+
+}
+
+
+function initPlayerSelector(playerList){
+    // playerSelector(ctx.playersPerYear[ctx.YEAR]);
+    let ids = ["player1DropdownContent", "player2DropdownContent"]
+    
+    for(let id in ids){
+        d3.select("#"+ids[id])
+        .selectAll("players")
+            .data(playerList)
+            .enter()
+            .append("a")
+            .on("click", (event, d) => {
+                console.log("Clicked on " + d.short_name);
+                showPlayerDropdown(ids[id]);
+                updatePlayerComparisonView(parseInt(id)+1, d);
+            })
+            .append("text")
+            .attr("x", 10)
+            .attr("y", 0)
+            .attr("font-size", 15)
+            .attr("font-weight", "bold")
+            .attr("font-family", "sans-serif")
+            .attr("fill", "#18414e")
+            .text(d => d.short_name);
+    }
+}
+
+function showPlayerDropdown(dropdownId) {
+    document.getElementById(dropdownId).classList.toggle("show");
+    // document.getElementById("player1DropdownContent").classList.toggle("show");
+    // document.getElementById("player2DropdownContent").classList.toggle("show");
+}
+// function showPlayer2Dropdown() {
+//     document.getElementById("player2DropdownContent").classList.toggle("show");
+//     // document.getElementById("player1DropdownContent").classList.toggle("show");
+// }
+
+function filterFunction(dropdownId, searchId) {
+    var input, filter, ul, li, a, i;
+    input = document.getElementById(searchId);
+    filter = input.value.toUpperCase();
+    div = document.getElementById(dropdownId);
+    a = div.getElementsByTagName("a");
+    for (i = 0; i < a.length; i++) {
+        txtValue = a[i].textContent || a[i].innerText;
+        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+            a[i].style.display = "";
+        } else {
+            a[i].style.display = "none";
+        }
+    }
+}
+
+function addPlayerFace(rootId, x, y, w, h, playerNo){
+    let root = d3.select(rootId);
+    root.append("rect")
+        .attr("x", x)
+        .attr("y", y)
+        .attr("width", w)
+        .attr("height", h)
+        .attr("fill", "#18414e");
+
+    root.append("image")
+        .attr("id", `player${playerNo}Image`)
+        .attr("x", x+20)
+        .attr("y", y+26)
+        .attr("width", 0.8*w)
+        .attr("height", 0.8*h)
+        .attr("anchor", "middle")
+        .attr("xlink:href", "https://cdn.sofifa.net/players/notfound_0_120.png");
+    
+    root.append("image")
+        .attr("id", `clubFlag${playerNo}`)
+        .attr("x", x+15)
+        .attr("y", y+10)
+        .attr("width", 35)
+        .attr("height", 35)
+        .attr("xlink:href", "https://cdn.sofifa.net/teams/21/60.png");
+    
+    root.append("image")
+        .attr("id", `nationalFlag${playerNo}`)
+        .attr("x", x+(w-50))
+        .attr("y", y+10)
+        .attr("width", 35)
+        .attr("height", 35)
+        .attr("xlink:href", "https://cdn.sofifa.net/flags/de.png");
+}
+
+function updatePlayerComparisonView(playerNo, player){
+    d3.select(`#player${playerNo}Image`).attr("xlink:href", player.player_face_url);
+    d3.select(`#clubFlag${playerNo}`).attr("xlink:href", player.club_logo_url);
+    d3.select(`#nationalFlag${playerNo}`).attr("xlink:href", player.nation_flag_url);
+
+    // for (let i = 0; i < 7; i++) {
+    //     updatePlayerStatDetailBars(Object.values(Object.values(statDicts)[i]), player);
+    // }
 }

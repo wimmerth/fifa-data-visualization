@@ -6,9 +6,11 @@
         <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/2655/2655990.png">
         <!-- https://d3js.org/ -->
         <script type="text/javascript" src="js/d3.v7.min.js"></script>
+        <script type="text/javascript" src="js/tinycolor.js"></script>
         <!-- Your code -->
         <script type="text/javascript" src="js/main.js"></script>
 <style type="text/css">
+@import url(style.css);
 
 svg {
     display: block;
@@ -41,6 +43,18 @@ rect.selection {
   font-family: sans-serif;
 }
 
+#playerSelectorFrame {
+  transform: translate(-50%, -50);
+  position: fixed; /* Sit on top of the page content */
+  display: none; /* Hidden by default */
+  width: 500px; /* Full width (cover the whole page) */
+  height: 500px; /* Full height (cover the whole page) */
+  top: 50%;
+  left: 50%;
+  cursor: pointer; /* Add a pointer on hover */
+  overflow-y: scroll;
+}
+
 </style>
     </head>
     <!-- Add a scrollable year selector in the top middle of the website -->
@@ -51,6 +65,22 @@ rect.selection {
                 <!-- text field to show currently selected year-->
                 <span class="label" id="yearLabel">2022</span>
                 <button class="button" onclick="updateYear(1)">+1</button>
+            </div>
+            <!-- <div id="playerSelectorFrame"></div> -->
+            <!-- <div style="position: fixed; top: 50% ; left: 50%; transform: translate(-50%, 0);">
+                <button class="button" onclick="initPlayerSelector()">Player 1</button>
+            </div> -->
+            <div class="player1Dropdown">
+                <button onclick="showPlayerDropdown('player1DropdownContent')" class="dropbtn">Select Player 1</button>
+                <div id="player1DropdownContent" class="dropdown-content">
+                  <input type="text" placeholder="Search.." id="player1Search" onkeyup="filterFunction('player1DropdownContent', 'player1Search')">
+                </div>
+            </div>
+            <div class="player2Dropdown">
+                <button onclick="showPlayerDropdown('player2DropdownContent')" class="dropbtn">Select Player 2</button>
+                <div id="player2DropdownContent" class="dropdown-content">
+                  <input type="text" placeholder="Search.." id="player2Search" onkeyup="filterFunction('player2DropdownContent', 'player2Search')">
+                </div>
             </div>
         </div>
     </body>
