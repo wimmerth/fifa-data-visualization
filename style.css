@@ -75,7 +75,7 @@
     background-color: #18414e;
     width: 350px;
     height: 300px;
-    border: 1px solid #ddd;
+    /* border: 1px solid #ddd; */
     z-index: 1;
   }
   

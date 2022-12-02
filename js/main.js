@@ -1175,7 +1175,7 @@ function initPlayerSelector(playerList){
     let ids = ["player1DropdownContent", "player2DropdownContent"]
     d3.select(".dropdown-content a:hover")
         .style("background-color", tinycolor("#18414e").darken(10));
-        
+
     for(let id in ids){
         d3.select("#"+ids[id])
         .selectAll("players")
@@ -1219,8 +1219,9 @@ function filterFunction(dropdownId, searchId) {
 }
 
 function initPlayersComparisonView(){
-    let playersComparisonG = d3.select("#playersComparisonG")
-    playersComparisonG.attr("transform", "translate(50,1050)")
+    let playersComparisonG = d3.select("#playersComparisonG");
+    
+    playersComparisonG.attr("transform", "translate(50,1050)");
     playersComparisonG.append("rect")
         .attr("width", 1800)
         .attr("height", 900)
@@ -1229,6 +1230,40 @@ function initPlayersComparisonView(){
     addPlayerFace("#playersComparisonG",0,50,200,180,1);
     addPlayerFace("#playersComparisonG",0,500,200,180,2);
 
+    // let comparison1 = playersComparisonG.append("rect")
+    //     .attr("width", 700)
+    //     .attr("height", 400)
+    //     .attr("transform", "translate(300,25)")
+    //     .attr("fill", tinycolor("#6C8289").lighten(10));
+    
+    // let comparison2 = playersComparisonG.append("rect")
+    //     .attr("width", 700)
+    //     .attr("height", 400)
+    //     .attr("transform", "translate(1050,25)")
+    //     .attr("fill", tinycolor("#6C8289").lighten(10));
+    
+    // let comparison3 = playersComparisonG.append("rect")
+    //     .attr("width", 700)
+    //     .attr("height", 400)
+    //     .attr("transform", "translate(300,475)")
+    //     .attr("fill", tinycolor("#6C8289").lighten(10));
+    
+    // let comparison4 = playersComparisonG.append("rect")
+    //     .attr("width", 700)
+    //     .attr("height", 400)
+    //     .attr("transform", "translate(1050,475)")
+        // .attr("fill", tinycolor("#6C8289").lighten(10));
+    
+    // time axis
+    // let xAxisScale = d3.scaleLinear()
+    //     .domain([0, 700])
+    //     .range([0, 100]);
+    
+    // comparison1.append("g")
+    //     .attr("id", "xAxis")
+    //     .attr("width", 700)
+    //     .attr("transform",`translate(0,50)`)
+    //     .call(d3.axisBottom(xAxisScale));
 }
 
 function addPlayerFace(rootId, x, y, w, h, playerNo){
