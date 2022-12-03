@@ -1224,11 +1224,17 @@ function initPlayersComparisonView(){
     playersComparisonG.attr("transform", "translate(0,1050)");
     playersComparisonG.append("rect")
         .attr("width", 1900)
-        .attr("height", 1500)
+        .attr("height", 1000)
         .attr("fill", "#6C8289");
+
+    playersComparisonG.append("rect")
+        .attr("transform", "translate(0,0)")
+        .attr("width", 300)
+        .attr("height", 1000)
+        .attr("fill", tinycolor("#6C8289").lighten(20));
     
-    addPlayerFace("#playersComparisonG",0,50,200,180,1);
-    addPlayerFace("#playersComparisonG",0,500,200,180,2);
+    addPlayerFace("#playersComparisonG",0,50,300,180,1);
+    addPlayerFace("#playersComparisonG",0,500,300,180,2);
     drawComparisonAxis(375,25);
     // drawComparisonAxis(1150,25);
     // drawComparisonAxis(375,275);
@@ -1269,16 +1275,6 @@ function addPlayerFace(rootId, x, y, w, h, playerNo){
         .attr("xlink:href", "https://cdn.sofifa.net/flags/de.png");
 }
 
-function updatePlayerComparisonView(playerNo, player){
-    d3.select(`#player${playerNo}Image`).attr("xlink:href", player.player_face_url);
-    d3.select(`#clubFlag${playerNo}`).attr("xlink:href", player.club_logo_url);
-    d3.select(`#nationalFlag${playerNo}`).attr("xlink:href", player.nation_flag_url);
-
-    // for (let i = 0; i < 7; i++) {
-    //     updatePlayerStatDetailBars(Object.values(Object.values(statDicts)[i]), player);
-    // }
-}
-
 function drawComparisonAxis(x,y){
     let years = [2015,2016,2017,2018,2019,2020,2021,2022];
     let width = 700;
@@ -1313,4 +1309,14 @@ function drawComparisonAxis(x,y){
     d3.selectAll(".domain").style("stroke",tinycolor("#18414e").darken(40));
     d3.selectAll(".tick").select("line").style("stroke",tinycolor("#18414e").darken(40));
     d3.selectAll(".tick").select("text").attr("fill", "#18414e").attr("font-size", 15);
+}
+
+function updatePlayerComparisonView(playerNo, player){
+    d3.select(`#player${playerNo}Image`).attr("xlink:href", player.player_face_url);
+    d3.select(`#clubFlag${playerNo}`).attr("xlink:href", player.club_logo_url);
+    d3.select(`#nationalFlag${playerNo}`).attr("xlink:href", player.nation_flag_url);
+
+    // for (let i = 0; i < 7; i++) {
+    //     updatePlayerStatDetailBars(Object.values(Object.values(statDicts)[i]), player);
+    // }
 }

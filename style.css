@@ -5,11 +5,11 @@
     padding: 8px;
     font-size: 16px;
     border: none;
-    width: 200px;
+    width: 302px;
     height: 50px;
     cursor: pointer;
     background-image: url('./img/icons8-down-arrow-32.png');
-    background-position: 165px 15px;
+    background-position: 265px 15px;
     background-size: 20px 20px;
     background-repeat: no-repeat;
   }
