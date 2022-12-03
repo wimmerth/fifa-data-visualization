@@ -30,7 +30,7 @@
     font-family: sans-serif;
     padding: 14px 20px 12px 45px;
     border: none;
-    width: 350px;
+    width: 300px;
     border-bottom: 1px solid #ddd;
   }
   #player2Search {
@@ -43,7 +43,7 @@
     font-family: sans-serif;
     padding: 14px 20px 12px 45px;
     border: none;
-    width: 350px;
+    width: 300px;
     border-bottom: 1px solid #ddd;
   }
   
@@ -54,14 +54,14 @@
   .player1Dropdown {
     position: absolute;
     transform: translate(-50%, -50);
-    top: 1058px;
+    top: 1143px;
     left:10px;
     display: inline-block;
   }
   .player2Dropdown {
     position: absolute;
     transform: translate(-50%, -50);
-    top: 1508px;
+    top: 1593px;
     left: 10px;
     display: inline-block;
   }
@@ -73,7 +73,7 @@
     overflow-x: hidden;
     position: absolute;
     background-color: #18414e;
-    width: 350px;
+    width: 300px;
     height: 300px;
     /* border: 1px solid #ddd; */
     z-index: 1;

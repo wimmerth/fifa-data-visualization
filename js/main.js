@@ -1241,17 +1241,26 @@ function initPlayersComparisonView(){
 }
 
 function addPlayerFace(rootId, x, y, w, h, playerNo){
+    y = y+85
     let root = d3.select(rootId);
+    root.append("rect")
+        .attr("x", x)
+        .attr("y", y)
+        .attr("width", w)
+        .attr("height", h+100)
+        .attr("fill", tinycolor("#18414e").lighten(10));
+
     root.append("rect")
         .attr("x", x)
         .attr("y", y)
         .attr("width", w)
         .attr("height", h)
         .attr("fill", "#18414e");
+    
 
     root.append("image")
         .attr("id", `player${playerNo}Image`)
-        .attr("x", x+20)
+        .attr("x", x+30)
         .attr("y", y+26)
         .attr("width", 0.8*w)
         .attr("height", 0.8*h)
@@ -1262,16 +1271,16 @@ function addPlayerFace(rootId, x, y, w, h, playerNo){
         .attr("id", `clubFlag${playerNo}`)
         .attr("x", x+15)
         .attr("y", y+10)
-        .attr("width", 35)
-        .attr("height", 35)
+        .attr("width", 45)
+        .attr("height", 45)
         .attr("xlink:href", "https://cdn.sofifa.net/teams/21/60.png");
     
     root.append("image")
         .attr("id", `nationalFlag${playerNo}`)
-        .attr("x", x+(w-50))
+        .attr("x", x+(w-60))
         .attr("y", y+10)
-        .attr("width", 35)
-        .attr("height", 35)
+        .attr("width", 45)
+        .attr("height", 45)
         .attr("xlink:href", "https://cdn.sofifa.net/flags/de.png");
 }
 
