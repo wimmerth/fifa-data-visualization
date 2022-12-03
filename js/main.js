@@ -1457,9 +1457,6 @@ function updateComparison1(playerNo, playerId, playersPerYear){
     let years = [2015,2016,2017,2018,2019,2020,2021,2022];
     let linePlot = d3.select("comparison1").append("g");
 
-    let selectedData = playersPerYear[years[0]].filter(player => player.sofifa_id == playerId)[0].overall;
-    console.log("Selected Player",selectedData);
-
     linePlot.append("path")
       .data(playersPerYear)
       .enter()
