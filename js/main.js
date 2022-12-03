@@ -1429,14 +1429,14 @@ function drawComparisonAxis(x,y){
     axis.append("g").attr("transform", `translate(${x},${y})`)
         .call(d3.axisLeft(ctx.yRange));
     // Y axis label:
-    axis.append("text")
-        .attr("text-anchor", "end")
-        .attr("font-size", 20)
-        .attr("fill", "#18414e")
-        .attr("transform", "rotate(-90)")
-        .attr("y", x - 35)
-        .attr("x", -(y+height)/2)
-        .text("Altitude")
+    // axis.append("text")
+    //     .attr("text-anchor", "end")
+    //     .attr("font-size", 20)
+    //     .attr("fill", "#18414e")
+    //     .attr("transform", "rotate(-90)")
+    //     .attr("y", x - 35)
+    //     .attr("x", -(y+height)/2)
+    //     .text("Text")
         
     d3.selectAll(".domain").style("stroke",tinycolor("#18414e").darken(40));
     d3.selectAll(".tick").select("line").style("stroke",tinycolor("#18414e").darken(40));
@@ -1447,8 +1447,8 @@ function updatePlayerComparisonView(playerNo, player){
     d3.select(`#playerImage${playerNo}`).attr("xlink:href", player.player_face_url);
     d3.select(`#clubFlag${playerNo}`).attr("xlink:href", player.club_logo_url);
     d3.select(`#nationalFlag${playerNo}`).attr("xlink:href", player.nation_flag_url);
-    d3.select(`#playerName${playerNo}`).attr("xlink:href", player.short_name);
-    d3.select(`#playerPosition${playerNo}`).attr("xlink:href", player.position);
+    d3.select(`#playerName${playerNo}`).text(player.short_name);
+    d3.select(`#playerPosition${playerNo}`).text(player.club_position);
 
     // for (let i = 0; i < 7; i++) {
     //     updatePlayerStatDetailBars(Object.values(Object.values(statDicts)[i]), player);
