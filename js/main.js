@@ -1,7 +1,7 @@
 const ctx = {
     YEAR: 2022,
     width: 1900,
-    height: 2000,
+    height: 3000,
     footballFieldLineWidth: 0.2,
     backgroundGrey: "#2b2b2b",
     grassGreen: "#338033",
@@ -1221,49 +1221,17 @@ function filterFunction(dropdownId, searchId) {
 function initPlayersComparisonView(){
     let playersComparisonG = d3.select("#playersComparisonG");
     
-    playersComparisonG.attr("transform", "translate(50,1050)");
+    playersComparisonG.attr("transform", "translate(0,1050)");
     playersComparisonG.append("rect")
-        .attr("width", 1800)
-        .attr("height", 900)
+        .attr("width", 1900)
+        .attr("height", 1500)
         .attr("fill", "#6C8289");
     
     addPlayerFace("#playersComparisonG",0,50,200,180,1);
     addPlayerFace("#playersComparisonG",0,500,200,180,2);
-
-    // let comparison1 = playersComparisonG.append("rect")
-    //     .attr("width", 700)
-    //     .attr("height", 400)
-    //     .attr("transform", "translate(300,25)")
-    //     .attr("fill", tinycolor("#6C8289").lighten(10));
-    
-    // let comparison2 = playersComparisonG.append("rect")
-    //     .attr("width", 700)
-    //     .attr("height", 400)
-    //     .attr("transform", "translate(1050,25)")
-    //     .attr("fill", tinycolor("#6C8289").lighten(10));
-    
-    // let comparison3 = playersComparisonG.append("rect")
-    //     .attr("width", 700)
-    //     .attr("height", 400)
-    //     .attr("transform", "translate(300,475)")
-    //     .attr("fill", tinycolor("#6C8289").lighten(10));
-    
-    // let comparison4 = playersComparisonG.append("rect")
-    //     .attr("width", 700)
-    //     .attr("height", 400)
-    //     .attr("transform", "translate(1050,475)")
-        // .attr("fill", tinycolor("#6C8289").lighten(10));
-    
-    // time axis
-    // let xAxisScale = d3.scaleLinear()
-    //     .domain([0, 700])
-    //     .range([0, 100]);
-    
-    // comparison1.append("g")
-    //     .attr("id", "xAxis")
-    //     .attr("width", 700)
-    //     .attr("transform",`translate(0,50)`)
-    //     .call(d3.axisBottom(xAxisScale));
+    drawComparisonAxis(375,25);
+    // drawComparisonAxis(1150,25);
+    // drawComparisonAxis(375,275);
 }
 
 function addPlayerFace(rootId, x, y, w, h, playerNo){
@@ -1309,4 +1277,40 @@ function updatePlayerComparisonView(playerNo, player){
     // for (let i = 0; i < 7; i++) {
     //     updatePlayerStatDetailBars(Object.values(Object.values(statDicts)[i]), player);
     // }
+}
+
+function drawComparisonAxis(x,y){
+    let years = [2015,2016,2017,2018,2019,2020,2021,2022];
+    let width = 700;
+    let height = 400;
+    let axis = d3.select("g#playersComparisonG").append("g");
+
+    ctx.yRange = d3.scaleLinear()
+        .domain([0, 100])
+        .range([y+height, y]);
+
+    ctx.xRange = d3.scaleBand()
+        .domain(years)
+        .range([x, x+width])
+        .padding([0.8])
+    // x axis
+    axis.append("g")
+        .attr("transform",`translate(0,${y+height})`)
+        .call(d3.axisBottom(ctx.xRange));
+    // y axis
+    axis.append("g").attr("transform", `translate(${x},${y})`)
+        .call(d3.axisLeft(ctx.yRange));
+    // Y axis label:
+    axis.append("text")
+        .attr("text-anchor", "end")
+        .attr("font-size", 20)
+        .attr("fill", "#18414e")
+        .attr("transform", "rotate(-90)")
+        .attr("y", x - 35)
+        .attr("x", -(y+height)/2)
+        .text("Altitude")
+        
+    d3.selectAll(".domain").style("stroke",tinycolor("#18414e").darken(40));
+    d3.selectAll(".tick").select("line").style("stroke",tinycolor("#18414e").darken(40));
+    d3.selectAll(".tick").select("text").attr("fill", "#18414e").attr("font-size", 15);
 }
