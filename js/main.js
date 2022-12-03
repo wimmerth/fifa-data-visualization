@@ -742,6 +742,32 @@ function initPlayerDetailView() {
         .attr("width", 40)
         .attr("height", 40)
         .attr("xlink:href", "https://cdn.sofifa.net/flags/de.png");
+    
+    potentialG = playerDetailG.append("g")
+        .attr("id", "playerPotentialG")
+        .attr("transform", "translate(375, 150)");
+    potentialG.append("circle")
+        .attr("cx", 0)
+        .attr("cy", 0)
+        .attr("r", 40)
+        .attr("fill", "#516166");
+    potentialG.append("text")
+        .attr("id", "playerPotential")
+        .attr("x", 0)
+        .attr("y", 5)
+        .attr("font-size", 30)
+        .attr("font-weight", "bold")
+        .attr("fill", "white")
+        .attr("text-anchor", "middle")
+        .text("POT");
+    potentialG.append("text")
+        .attr("x", 0)
+        .attr("y", 20)
+        .attr("font-size", 10)
+        .attr("font-weight", "bold")
+        .attr("fill", "white")
+        .attr("text-anchor", "middle")
+        .text("Potential");
 
     playerDetailG.append("circle")
         .attr("cx", 375)
@@ -752,12 +778,27 @@ function initPlayerDetailView() {
     playerDetailG.append("text")
         .attr("id", "playerOverall")
         .attr("x", 375)
-        .attr("y", 160)
+        .attr("y", 155)
         .attr("font-size", 30)
         .attr("font-weight", "bold")
         .attr("fill", "#18414e")
         .attr("text-anchor", "middle")
         .text("OVR");
+    playerDetailG.append("text")
+        .attr("x", 375)
+        .attr("y", 170)
+        .attr("font-size", 10)
+        .attr("font-weight", "bold")
+        .attr("fill", "#18414e")
+        .attr("text-anchor", "middle")
+        .text("Overall");
+    
+    playerDetailG.append("circle")
+        .attr("id", "OVR_overlay")
+        .attr("cx", 375)
+        .attr("cy", 150)
+        .attr("r", 40)
+        .attr("fill-opacity", 0);
 
     playerDetailG.append("text")
         .attr("id", "playerAge")
@@ -934,6 +975,43 @@ function updatePlayerDetailView(player) {
     d3.select("#playerNationality").text(player.nationality_name);
     d3.select("#playerPosition").text(player.club_position);
     d3.select("#playerOverall").text(player.overall);
+    d3.select("#OVR_overlay")
+        .on("mouseenter", function () {
+            d3.select("#playerPotentialG")
+                .transition()
+                .duration(500)
+                .attr("transform", "translate(440, 175)");
+            d3.select("#playerPotential")
+                .text(player.potential);
+            detailG = d3.select("#playerDetailG").append("g")
+                .attr("id", "ovr-detail")
+                .attr("transform", "translate(" + 270 + "," + -55 + ")");
+            detailG.append("rect")
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("width", 210)
+                .attr("height", 160)
+                .attr("fill", "lightblue");
+            detailG.append("rect")
+                .attr("x", 5)
+                .attr("y", 5)
+                .attr("width", 200)
+                .attr("height", 150)
+                .attr("fill", "#18414e");
+            attributeHistoryG = detailG.append("g")
+                .attr("transform", "translate(5, 5)");
+            densityG = detailG.append("g")
+                .attr("transform", "translate(5, 80)");
+            densityPlot(ctx.currentDataSelection, "overall", densityG, 200, 75, player.overall);
+            attributeHistoryPlot(player, "overall", attributeHistoryG, 200, 75);
+        })
+        .on("mouseout", function () {
+            d3.select("#playerPotentialG")
+                .transition()
+                .duration(500)
+                .attr("transform", "translate(375, 150)");
+            d3.select("#ovr-detail").remove();
+        });
     d3.select("#playerAge").text("Age: " + player.age);
     d3.select("#playerHeight").text("Height: " + player.height_cm);
     d3.select("#playerWeight").text("Weight: " + player.weight_kg);
@@ -1019,17 +1097,25 @@ function updatePlayerStatDetailBars(attr_names, player) {
             .on("mouseenter", function () {
                 detailG = d3.select("#statDetailG_" + attr_names[i]).append("g")
                     .attr("id", "detailG_" + attr_names[i] + "Text")
-                    .attr("transform", "translate(" + (-1) + "," + (- 120) + ")");
+                    .attr("transform", "translate(" + -25 + "," + (- 180) + ")");
                 detailG.append("rect")
                     .attr("x", 0)
                     .attr("y", 0)
-                    .attr("width", 162)
-                    .attr("height", 100)
+                    .attr("width", 210)
+                    .attr("height", 160)
+                    .attr("fill", "lightblue");
+                detailG.append("rect")
+                    .attr("x", 5)
+                    .attr("y", 5)
+                    .attr("width", 200)
+                    .attr("height", 150)
                     .attr("fill", "#18414e");
                 attributeHistoryG = detailG.append("g")
-                    .attr("transform", "translate(0, 50)");
-                densityPlot(ctx.currentDataSelection, attr_names[i], detailG, 160, 50, player[attr_names[i]]);
-                attributeHistoryPlot(player, attr_names[i], attributeHistoryG, 160, 50);
+                    .attr("transform", "translate(5, 5)");
+                densityG = detailG.append("g")
+                    .attr("transform", "translate(5, 80)");
+                densityPlot(ctx.currentDataSelection, attr_names[i], densityG, 200, 75, player[attr_names[i]]);
+                attributeHistoryPlot(player, attr_names[i], attributeHistoryG, 200, 75);
             })
             .on("mouseout", function () {
                 d3.select("#detailG_" + attr_names[i] + "Text").remove();
