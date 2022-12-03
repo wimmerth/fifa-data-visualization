@@ -1319,16 +1319,18 @@ function initPlayersComparisonView(){
         .attr("height", 1000)
         .attr("fill", tinycolor("#6C8289").lighten(20));
     
-    addPlayerFace("#playersComparisonG",0,50,300,180,1);
-    addPlayerFace("#playersComparisonG",0,500,300,180,2);
+    addPlayerFace("#playersComparisonG",0,85,300,180,1);
+    addPlayerFace("#playersComparisonG",0,585,300,180,2);
     drawComparisonAxis(375,25);
     // drawComparisonAxis(1150,25);
     // drawComparisonAxis(375,275);
 }
 
 function addPlayerFace(rootId, x, y, w, h, playerNo){
-    y = y+85
+    y = y+50
     let root = d3.select(rootId);
+
+    // the detail rect(with light color) is from y = y+h to y = y+h+100
     root.append("rect")
         .attr("x", x)
         .attr("y", y)
@@ -1342,10 +1344,9 @@ function addPlayerFace(rootId, x, y, w, h, playerNo){
         .attr("width", w)
         .attr("height", h)
         .attr("fill", "#18414e");
-    
 
     root.append("image")
-        .attr("id", `player${playerNo}Image`)
+        .attr("id", `playerImage${playerNo}`)
         .attr("x", x+30)
         .attr("y", y+26)
         .attr("width", 0.8*w)
@@ -1357,8 +1358,8 @@ function addPlayerFace(rootId, x, y, w, h, playerNo){
         .attr("id", `clubFlag${playerNo}`)
         .attr("x", x+15)
         .attr("y", y+10)
-        .attr("width", 45)
-        .attr("height", 45)
+        .attr("width", 55)
+        .attr("height", 55)
         .attr("xlink:href", "https://cdn.sofifa.net/teams/21/60.png");
     
     root.append("image")
@@ -1368,6 +1369,42 @@ function addPlayerFace(rootId, x, y, w, h, playerNo){
         .attr("width", 45)
         .attr("height", 45)
         .attr("xlink:href", "https://cdn.sofifa.net/flags/de.png");
+    
+    root.append("text")
+        .attr("id", `playerName${playerNo}`)
+        .attr("x", 10)
+        .attr("y", y+h+30)
+        .attr("font-size", 25)
+        .attr("font-weight", "bold")
+        .attr("fill", "#18414e")
+        .text("Player1 Name");
+
+    root.append("text")
+        .attr("id", `playerPosition${playerNo}`)
+        .attr("x", 10)
+        .attr("y", y+h+60)
+        .attr("font-size", 20)
+        .attr("font-weight", "bold")
+        .attr("fill", "#18414e")
+        // .attr("text-anchor", "end")
+        .text("POS");
+    // playerDetailG.append("text")
+    //     .attr("id", "playerTeam")
+    //     .attr("x", 10)
+    //     .attr("y", 100)
+    //     .attr("font-size", 30)
+    //     .attr("fill", "#18414e")
+    //     .text("Team Name");
+
+    // playerDetailG.append("text")
+    //     .attr("id", "playerNationality")
+    //     .attr("x", 740)
+    //     .attr("y", 100)
+    //     .attr("font-size", 30)
+    //     .attr("fill", "#18414e")
+    //     .attr("text-anchor", "end")
+    //     .text("Nationality");
+
 }
 
 function drawComparisonAxis(x,y){
@@ -1407,9 +1444,11 @@ function drawComparisonAxis(x,y){
 }
 
 function updatePlayerComparisonView(playerNo, player){
-    d3.select(`#player${playerNo}Image`).attr("xlink:href", player.player_face_url);
+    d3.select(`#playerImage${playerNo}`).attr("xlink:href", player.player_face_url);
     d3.select(`#clubFlag${playerNo}`).attr("xlink:href", player.club_logo_url);
     d3.select(`#nationalFlag${playerNo}`).attr("xlink:href", player.nation_flag_url);
+    d3.select(`#playerName${playerNo}`).attr("xlink:href", player.short_name);
+    d3.select(`#playerPosition${playerNo}`).attr("xlink:href", player.position);
 
     // for (let i = 0; i < 7; i++) {
     //     updatePlayerStatDetailBars(Object.values(Object.values(statDicts)[i]), player);
