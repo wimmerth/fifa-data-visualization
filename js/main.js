@@ -1411,7 +1411,7 @@ function drawComparisonAxis(x,y){
     let years = [2015,2016,2017,2018,2019,2020,2021,2022];
     let width = 700;
     let height = 400;
-    let axis = d3.select("g#playersComparisonG").append("g");
+    let axis = d3.select("g#playersComparisonG").append("svg").attr("id", "comparison1");
 
     ctx.yRange = d3.scaleLinear()
         .domain([0, 100])
@@ -1450,7 +1450,29 @@ function updatePlayerComparisonView(playerNo, player){
     d3.select(`#playerName${playerNo}`).text(player.short_name);
     d3.select(`#playerPosition${playerNo}`).text(player.club_position);
 
-    // for (let i = 0; i < 7; i++) {
-    //     updatePlayerStatDetailBars(Object.values(Object.values(statDicts)[i]), player);
-    // }
+    updateComparison1(playerNo, player.sofifa_id, ctx.playersPerYear);
+}
+
+function updateComparison1(playerNo, playerId, playersPerYear){
+    let years = [2015,2016,2017,2018,2019,2020,2021,2022];
+    let linePlot = d3.select("comparison1").append("g");
+
+    let selectedData = playersPerYear[years[0]].filter(player => player.sofifa_id == playerId)[0].overall;
+    console.log("Selected Player",selectedData);
+
+    linePlot.append("path")
+      .data(playersPerYear)
+      .enter()
+      .attr("fill", "none")
+      .attr("stroke", "steelblue")
+      .attr("stroke-width", 1.5)
+      .attr("d", d3.line()
+        .x(function(d,i) { 
+            console.log(years[i])
+            return ctx.xRange(years[i]) 
+        })
+        .y(function(d,i) { 
+            console.log(d[years[i]].filter(player => player.sofifa_id == playerId)[0].overall)
+            return ctx.yRange(d[years[i]].filter(player => player.sofifa_id == playerId)[0].overall) })
+        )
 }
