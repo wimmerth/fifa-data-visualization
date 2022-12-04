@@ -1136,13 +1136,13 @@ function attributeHistoryPlot(player, attr, G, width, height) {
     history = history.filter(function (d) {
         return d != null;
     });
-    console.log(history);
     let history_min = d3.min(history, d => {
         return d[1];
     });
     let history_max = d3.max(history, d => {
         return d[1];
     });
+    console.log(history, playerId, currentYear, history_min, history_max);
     let xScale = d3.scaleLinear()
         .domain([2015, 2022])
         .range([0, width]);
@@ -1259,6 +1259,15 @@ function kernelEpanechnikov(k) {
 function initPlayerSelector(playerList){
     // playerSelector(ctx.playersPerYear[ctx.YEAR]);
     let ids = ["player1DropdownContent", "player2DropdownContent"]
+
+    let allAttrs = []
+    let attrRef = {}
+    for(idx in Object.keys(statDicts)){
+        let stats = statDicts[Object.keys(statDicts)[idx]]
+        Object.keys(stats).forEach(stat => allAttrs.push(stat))
+        Object.keys(stats).forEach(stat => attrRef[stat] = stats[stat])
+    }
+    // console.log(attrRef);
     d3.select(".dropdown-content a:hover")
         .style("background-color", tinycolor("#18414e").darken(10));
 
@@ -1282,6 +1291,24 @@ function initPlayerSelector(playerList){
         .attr("fill", "#18414e")
             .text(d => d.short_name);
     }
+    d3.select("#attrSelectionContent")
+        .selectAll("attributes")
+        .data(allAttrs)
+        .enter()
+        .append("a")
+        .on("click", (event, d) => {
+            console.log("Clicked on " + attrRef[d]);
+            // showPlayerDropdown(ids[id]);
+            // updatePlayerComparisonView(parseInt(id)+1, d);
+        })
+        .append("text")
+        .attr("x", 10)
+        .attr("y", 0)
+        .attr("font-size", 15)
+        .attr("font-weight", "bold")
+        .attr("font-family", "sans-serif")
+        .attr("fill", "#18414e")
+            .text(d => d);
 }
 
 function showPlayerDropdown(dropdownId) {
@@ -1388,46 +1415,32 @@ function addPlayerFace(rootId, x, y, w, h, playerNo){
         .attr("fill", "#18414e")
         // .attr("text-anchor", "end")
         .text("POS");
-    // playerDetailG.append("text")
-    //     .attr("id", "playerTeam")
-    //     .attr("x", 10)
-    //     .attr("y", 100)
-    //     .attr("font-size", 30)
-    //     .attr("fill", "#18414e")
-    //     .text("Team Name");
-
-    // playerDetailG.append("text")
-    //     .attr("id", "playerNationality")
-    //     .attr("x", 740)
-    //     .attr("y", 100)
-    //     .attr("font-size", 30)
-    //     .attr("fill", "#18414e")
-    //     .attr("text-anchor", "end")
-    //     .text("Nationality");
-
 }
 
 function drawComparisonAxis(x,y){
     let years = [2015,2016,2017,2018,2019,2020,2021,2022];
     let width = 700;
     let height = 400;
-    let axis = d3.select("g#playersComparisonG").append("svg").attr("id", "comparison1");
+    let axis = d3.select("g#playersComparisonG").append("g").attr("id", "comparison1");
 
-    ctx.yRange = d3.scaleLinear()
+    ctx.yRatingScale = d3.scaleLinear()
         .domain([0, 100])
         .range([y+height, y]);
 
-    ctx.xRange = d3.scaleBand()
+    ctx.xYearsScale = d3.scaleBand()
         .domain(years)
         .range([x, x+width])
         .padding([0.8])
     // x axis
     axis.append("g")
+        .attr("id", "yAxisComp1")
         .attr("transform",`translate(0,${y+height})`)
-        .call(d3.axisBottom(ctx.xRange));
+        .call(d3.axisBottom(ctx.xYearsScale));
     // y axis
-    axis.append("g").attr("transform", `translate(${x},${y})`)
-        .call(d3.axisLeft(ctx.yRange));
+    axis.append("g")
+        .attr("id", "xAxisComp1")
+        .attr("transform", `translate(${x},${y})`)
+        .call(d3.axisLeft(ctx.yRatingScale));
     // Y axis label:
     // axis.append("text")
     //     .attr("text-anchor", "end")
@@ -1450,26 +1463,45 @@ function updatePlayerComparisonView(playerNo, player){
     d3.select(`#playerName${playerNo}`).text(player.short_name);
     d3.select(`#playerPosition${playerNo}`).text(player.club_position);
 
-    updateComparison1(playerNo, player.sofifa_id, ctx.playersPerYear);
+    updateComparison1(playerNo, player, ctx.playersPerYear);
 }
 
-function updateComparison1(playerNo, playerId, playersPerYear){
+function updateComparison1(playerNo, player, playersPerYear){
     let years = [2015,2016,2017,2018,2019,2020,2021,2022];
-    let linePlot = d3.select("comparison1").append("g");
+    let linePlot = d3.select("#comparison1").append("g")
+                        .attr("transform", "translate(5, 5)");
+
+    linePlot.append("text")
+        .attr("x", 375)
+        .attr("y", 30)
+        .attr("font-size", 15)
+        .attr("fill", "lightblue")
+        .text("Attribute History over Years");
+
+    let currentYear = player.year;
+    let playerId = player.sofifa_id;
+    let history = attributeHistory(playerId, "power_shot_power");
+    history = history.filter(function (d) {
+        return d != null;
+    });
+    console.log(currentYear)
+    let line = d3.line()
+        .x(d => ctx.xYearsScale(d[0]))
+        .y(d => ctx.yRatingScale(d[1]));
 
     linePlot.append("path")
-      .data(playersPerYear)
-      .enter()
-      .attr("fill", "none")
-      .attr("stroke", "steelblue")
-      .attr("stroke-width", 1.5)
-      .attr("d", d3.line()
-        .x(function(d,i) { 
-            console.log(years[i])
-            return ctx.xRange(years[i]) 
-        })
-        .y(function(d,i) { 
-            console.log(d[years[i]].filter(player => player.sofifa_id == playerId)[0].overall)
-            return ctx.yRange(d[years[i]].filter(player => player.sofifa_id == playerId)[0].overall) })
-        )
+        .attr("id", `player${1}LinePlot`)
+        .datum(history)
+        .attr("d", line)
+        .attr("fill", "none")
+        .attr("stroke", "lightblue")
+        .attr("stroke-width", 2);
+    
+    // linePlot.append("circle")
+    //     .attr("cx", ctx.xYearsScale(currentYear))
+    //     .attr("cy", ctx.yRatingScale(player["power_shot_power"]))
+    //     .attr("r", 5)
+    //     .attr("fill", "red");
+    // attributeHistoryPlot(player, "overall", linePlot, 700, 400);
+
 }

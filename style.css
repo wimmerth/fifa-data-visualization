@@ -65,6 +65,13 @@
     left: 10px;
     display: inline-block;
   }
+  .attrSelection {
+    position: absolute;
+    transform: translate(-50%, -50);
+    top: 1058px;
+    left: 385px;
+    display: inline-block;
+  }
   
   /* Dropdown Content (Hidden by Default) */
   .dropdown-content {
