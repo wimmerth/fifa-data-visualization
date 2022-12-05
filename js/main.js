@@ -1178,7 +1178,9 @@ function attributeHistory(playerId, attribute) {
         for (let j = 0; j < data.length; j++) {
             found = false;
             if (data[j].sofifa_id == playerId) {
-                attributeHistory.push([i,parseInt(data[j][attribute])]);
+                if (data[j][attribute] != null && data[j][attribute] != "") {
+                    attributeHistory.push([i,parseInt(data[j][attribute])]);
+                }
                 found = true;
                 break;
             }
