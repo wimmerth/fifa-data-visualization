@@ -1519,6 +1519,13 @@ function updateComparison1(playerNo, player){
         return d != null;
     });
     console.log(currentYear)
+
+    ctx[`curPlayer${playerNo}y`] = history[1]
+
+    let lineStart = d3.line()
+        .x(ctx.xYearsScale(2015))
+        .y(d => ctx.yRatingScale(d[1]))
+
     let line = d3.line()
         .x(d => ctx.xYearsScale(d[0]))
         .y(d => ctx.yRatingScale(d[1]));
@@ -1526,18 +1533,24 @@ function updateComparison1(playerNo, player){
     if(playerNo == 1){
         linePlot.append("path")
             .datum(history)
-            .attr("d", line)
             .attr("fill", "none")
             .attr("stroke", "#4DD0F7")
-            .attr("stroke-width", 2);
+            .attr("stroke-width", 2)
+            .attr("d", lineStart)
+            .transition()
+            .duration(500)
+            .attr("d", line);
     }
     else{
         linePlot.append("path")
             .datum(history)
-            .attr("d", line)
             .attr("fill", "none")
             .attr("stroke", "#F76590")
-            .attr("stroke-width", 2);
+            .attr("stroke-width", 2)
+            .attr("d", lineStart)
+            .transition()
+            .duration(500)
+            .attr("d", line);
     }
     
     // linePlot.append("circle")
@@ -1566,6 +1579,15 @@ function updateComparisonAttr(player1, player2){
     });
 
     console.log("History",historyPlayer1, historyPlayer2);
+    
+    // let lineStartP1 = d3.line()
+    //     .x(d => ctx.xYearsScale(d[0]))
+    //     .y(d => ctx.yRatingScale(ctx.curPlayer1y))
+    
+    // let lineStartP2 = d3.line()
+    //     .x(d => ctx.xYearsScale(d[0]))
+    //     .y(d => ctx.yRatingScale(ctx.curPlayery))
+
     let linePlayer1 = d3.line()
         .x(d => ctx.xYearsScale(d[0]))
         .y(d => ctx.yRatingScale(d[1]));
