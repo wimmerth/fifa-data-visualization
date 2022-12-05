@@ -6,7 +6,8 @@ const ctx = {
     backgroundGrey: "#2b2b2b",
     grassGreen: "#338033",
     SELECTION: null,
-    comparisonAttr: "overall"
+    comparisonAttr: "overall",
+    comparisonAttrRef: "Overall"
 }
 
 function updateYear(input) {
@@ -1306,6 +1307,7 @@ function initSelectors(playerList){
         .on("click", (event, d) => {
             console.log("Clicked on " + attrRef[d]);
             ctx.comparisonAttr = attrRef[d]
+            ctx.comparisonAttrRef = d
             showPlayerDropdown("attrSelectionContent");
             updateComparisonAttr(ctx.player1, ctx.player2);
         })
@@ -1480,8 +1482,6 @@ function updatePlayerComparisonView(playerNo, player){
     d3.select(`#nationalFlag${playerNo}`).attr("xlink:href", player.nation_flag_url);
     d3.select(`#playerName${playerNo}`).text(player.short_name);
     d3.select(`#playerPosition${playerNo}`).text(player.club_position);
-
-    // updateComparison1(playerNo, player, ctx.playersPerYear);
 }
 
 function updateComparison1(playerNo, player){
@@ -1489,7 +1489,11 @@ function updateComparison1(playerNo, player){
         document.getElementById("comparison1").removeChild(
             document.getElementById(`player${playerNo}LinePlot`)
         );
-        
+    }
+    if(document.getElementById(`comparisonTitle`) != null){
+        document.getElementById("comparison1").removeChild(
+            document.getElementById("comparisonTitle")
+        );
     }
     // let years = [2015,2016,2017,2018,2019,2020,2021,2022];
     let linePlot = d3.select("#comparison1").append("g")
@@ -1497,12 +1501,16 @@ function updateComparison1(playerNo, player){
                         .attr("transform", "translate(5, 5)");
 
 
-    // linePlot.append("text")
-    //     .attr("x", 375)
-    //     .attr("y", 30)
-    //     .attr("font-size", 15)
-    //     .attr("fill", "lightblue")
-    //     .text("Attribute History over Years");
+    d3.select("#comparison1")
+        .append("g")
+        .attr("id", "comparisonTitle")
+        .append("text")
+        .attr("x", 1070)
+        .attr("y", 40)
+        .attr("font-size", 20)
+        .attr("fill", "#18414e")
+        .attr("text-anchor", "end")
+        .text(ctx.comparisonAttrRef);
 
     let currentYear = player.year;
     let playerId = player.sofifa_id;
@@ -1568,6 +1576,7 @@ function updateComparisonAttr(player1, player2){
 
     document.getElementById(`player1LinePlot`).innerHTML = '';
     document.getElementById(`player2LinePlot`).innerHTML = '';
+    document.getElementById(`comparisonTitle`).innerHTML = '';
 
     // player1Plot.datum(historyPlayer1)
     // player2Plot.datum(historyPlayer2)
@@ -1585,5 +1594,14 @@ function updateComparisonAttr(player1, player2){
         .attr("fill", "none")
         .attr("stroke", "#F76590")
         .attr("stroke-width", 2);
+    
+    d3.select("#comparisonTitle")
+        .append("text")
+        .attr("x", 1070)
+        .attr("y", 40)
+        .attr("font-size", 20)
+        .attr("fill", "#18414e")
+        .attr("text-anchor", "end")
+        .text(ctx.comparisonAttrRef);
 
 }
