@@ -14,6 +14,22 @@
     background-size: 20px 20px;
     background-repeat: no-repeat;
   }
+
+  .attrdropbtn {
+    background-color: #338033;
+    color: white;
+    padding: 8px;
+    font-size: 16px;
+    border: none;
+    display: inline-block;
+    width: 302px;
+    height: 40px;
+    cursor: pointer;
+    background-image: url('./img/icons8-down-arrow-32.png');
+    background-position: 265px 10px;
+    background-size: 20px 20px;
+    background-repeat: no-repeat;
+  }
   
   /* Dropdown button on hover & focus */
   .dropbtn:hover, .dropbtn:focus {
