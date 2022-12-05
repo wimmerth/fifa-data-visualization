@@ -6,6 +6,7 @@ const ctx = {
     backgroundGrey: "#2b2b2b",
     grassGreen: "#338033",
     SELECTION: null,
+    comparisonAttr: "overall"
 }
 
 function updateYear(input) {
@@ -1259,7 +1260,6 @@ function kernelEpanechnikov(k) {
 function initSelectors(playerList){
     // playerSelector(ctx.playersPerYear[ctx.YEAR]);
     let ids = ["player1DropdownContent", "player2DropdownContent"]
-    let attr = "overall"
     let allAttrs = []
     let attrRef = {}
     for(idx in Object.keys(statDicts)){
@@ -1282,7 +1282,7 @@ function initSelectors(playerList){
             ctx[`player${parseInt(id)+1}`] = d;
             showPlayerDropdown(ids[id]);
             updatePlayerComparisonView(parseInt(id)+1, d);
-            updateComparison1(parseInt(id)+1, d, ctx.playersPerYear, attr);
+            updateComparison1(parseInt(id)+1, d);
         })
         .append("text")
         .attr("x", 10)
@@ -1300,9 +1300,9 @@ function initSelectors(playerList){
         .append("a")
         .on("click", (event, d) => {
             console.log("Clicked on " + attrRef[d]);
-            attr = attrRef[d]
+            ctx.comparisonAttr = attrRef[d]
             showPlayerDropdown("attrSelectionContent");
-            updateComparisonAttr(ctx.player1, ctx.player2, attr);
+            updateComparisonAttr(ctx.player1, ctx.player2);
         })
         .append("text")
         .attr("x", 10)
@@ -1469,21 +1469,30 @@ function updatePlayerComparisonView(playerNo, player){
     // updateComparison1(playerNo, player, ctx.playersPerYear);
 }
 
-function updateComparison1(playerNo, player, playersPerYear, attr){
+function updateComparison1(playerNo, player){
+    if(document.getElementById(`player${playerNo}LinePlot`) != null){
+        // document.getElementById(`player${playerNo}LinePlot`).innerHTML = ''
+        document.getElementById("comparison1").removeChild(
+            document.getElementById(`player${playerNo}LinePlot`)
+        );
+        
+    }
     // let years = [2015,2016,2017,2018,2019,2020,2021,2022];
     let linePlot = d3.select("#comparison1").append("g")
+                        .attr("id", `player${playerNo}LinePlot`)
                         .attr("transform", "translate(5, 5)");
 
-    linePlot.append("text")
-        .attr("x", 375)
-        .attr("y", 30)
-        .attr("font-size", 15)
-        .attr("fill", "lightblue")
-        .text("Attribute History over Years");
+
+    // linePlot.append("text")
+    //     .attr("x", 375)
+    //     .attr("y", 30)
+    //     .attr("font-size", 15)
+    //     .attr("fill", "lightblue")
+    //     .text("Attribute History over Years");
 
     let currentYear = player.year;
     let playerId = player.sofifa_id;
-    let history = attributeHistory(playerId, "power_shot_power");
+    let history = attributeHistory(playerId, ctx.comparisonAttr);
     history = history.filter(function (d) {
         return d != null;
     });
@@ -1493,7 +1502,6 @@ function updateComparison1(playerNo, player, playersPerYear, attr){
         .y(d => ctx.yRatingScale(d[1]));
 
     linePlot.append("path")
-        .attr("id", `player${1}LinePlot`)
         .datum(history)
         .attr("d", line)
         .attr("fill", "none")
@@ -1509,15 +1517,15 @@ function updateComparison1(playerNo, player, playersPerYear, attr){
 
 }
 
-function updateComparisonAttr(player1, player2, attr){
+function updateComparisonAttr(player1, player2){
     console.log(ctx)
-    console.log(ctx.player1.short_name, ctx.player2.short_name, attr);
-    let player1Plot = d3.select(`player${1}LinePlot`)
-    let player2Plot = d3.select(`player${2}LinePlot`)
+    console.log(ctx.player1.short_name, ctx.player2.short_name, ctx.comparisonAttr);
+    let player1Plot = d3.select(`#player1LinePlot`)
+    let player2Plot = d3.select(`#player2LinePlot`)
 
     let currentYear = player1.year;
-    let historyPlayer1 = attributeHistory(player1.sofifa_id, attr);
-    let historyPlayer2 = attributeHistory(player2.sofifa_id, attr);
+    let historyPlayer1 = attributeHistory(player1.sofifa_id, ctx.comparisonAttr);
+    let historyPlayer2 = attributeHistory(player2.sofifa_id, ctx.comparisonAttr);
     historyPlayer1 = historyPlayer1.filter(function (d) {
         return d != null;
     });
@@ -1525,6 +1533,7 @@ function updateComparisonAttr(player1, player2, attr){
         return d != null;
     });
 
+    console.log("History",historyPlayer1, historyPlayer2);
     let linePlayer1 = d3.line()
         .x(d => ctx.xYearsScale(d[0]))
         .y(d => ctx.yRatingScale(d[1]));
@@ -1533,13 +1542,24 @@ function updateComparisonAttr(player1, player2, attr){
         .x(d => ctx.xYearsScale(d[0]))
         .y(d => ctx.yRatingScale(d[1]));
 
-    player1Plot.datum(historyPlayer1)
-    player2Plot.datum(historyPlayer2)
-    player1Plot.transition()
-        .duration(500)
+    document.getElementById(`player1LinePlot`).innerHTML = '';
+    document.getElementById(`player2LinePlot`).innerHTML = '';
+
+    // player1Plot.datum(historyPlayer1)
+    // player2Plot.datum(historyPlayer2)
+
+    player1Plot.append("path")
+        .datum(historyPlayer1)
         .attr("d", linePlayer1)
-    player2Plot.transition()
-        .duration(500)
+        .attr("fill", "none")
+        .attr("stroke", "lightblue")
+        .attr("stroke-width", 2);
+
+    player2Plot.append("path")
+        .datum(historyPlayer2)
         .attr("d", linePlayer2)
+        .attr("fill", "none")
+        .attr("stroke", "lightblue")
+        .attr("stroke-width", 2);
 
 }
