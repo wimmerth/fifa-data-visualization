@@ -5,6 +5,7 @@
     padding: 8px;
     font-size: 16px;
     border: none;
+    display: inline-block;
     width: 302px;
     height: 50px;
     cursor: pointer;
@@ -69,7 +70,7 @@
     position: absolute;
     transform: translate(-50%, -50);
     top: 1058px;
-    left: 385px;
+    left: 388px;
     display: inline-block;
   }
   
