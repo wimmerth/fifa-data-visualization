@@ -1480,8 +1480,6 @@ function updatePlayerComparisonView(playerNo, player){
     d3.select(`#nationalFlag${playerNo}`).attr("xlink:href", player.nation_flag_url);
     d3.select(`#playerName${playerNo}`).text(player.short_name);
     d3.select(`#playerPosition${playerNo}`).text(player.club_position);
-
-    // updateComparison1(playerNo, player, ctx.playersPerYear);
 }
 
 function updateComparison1(playerNo, player){
