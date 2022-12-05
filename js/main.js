@@ -1270,6 +1270,9 @@ function initSelectors(playerList){
     // console.log(attrRef);
     d3.select(".dropdown-content a:hover")
         .style("background-color", tinycolor("#18414e").darken(10));
+    
+    d3.select("#attrBtn")
+        .attr("textContent", ctx.comparisonAttr);
 
     for(let id in ids){
         d3.select("#"+ids[id])
@@ -1361,12 +1364,22 @@ function addPlayerFace(rootId, x, y, w, h, playerNo){
     let root = d3.select(rootId);
 
     // the detail rect(with light color) is from y = y+h to y = y+h+100
-    root.append("rect")
-        .attr("x", x)
-        .attr("y", y)
-        .attr("width", w)
-        .attr("height", h+100)
-        .attr("fill", tinycolor("#18414e").lighten(10));
+    if(playerNo == 1){
+        root.append("rect")
+            .attr("x", x)
+            .attr("y", y)
+            .attr("width", w)
+            .attr("height", h+100)
+            .attr("fill", "#4DD0F7");
+    }
+    else{
+        root.append("rect")
+            .attr("x", x)
+            .attr("y", y)
+            .attr("width", w)
+            .attr("height", h+100)
+            .attr("fill", "#F76590");
+    }
 
     root.append("rect")
         .attr("x", x)
@@ -1471,7 +1484,6 @@ function updatePlayerComparisonView(playerNo, player){
 
 function updateComparison1(playerNo, player){
     if(document.getElementById(`player${playerNo}LinePlot`) != null){
-        // document.getElementById(`player${playerNo}LinePlot`).innerHTML = ''
         document.getElementById("comparison1").removeChild(
             document.getElementById(`player${playerNo}LinePlot`)
         );
@@ -1501,12 +1513,22 @@ function updateComparison1(playerNo, player){
         .x(d => ctx.xYearsScale(d[0]))
         .y(d => ctx.yRatingScale(d[1]));
 
-    linePlot.append("path")
-        .datum(history)
-        .attr("d", line)
-        .attr("fill", "none")
-        .attr("stroke", "lightblue")
-        .attr("stroke-width", 2);
+    if(playerNo == 1){
+        linePlot.append("path")
+            .datum(history)
+            .attr("d", line)
+            .attr("fill", "none")
+            .attr("stroke", "#4DD0F7")
+            .attr("stroke-width", 2);
+    }
+    else{
+        linePlot.append("path")
+            .datum(history)
+            .attr("d", line)
+            .attr("fill", "none")
+            .attr("stroke", "#F76590")
+            .attr("stroke-width", 2);
+    }
     
     // linePlot.append("circle")
     //     .attr("cx", ctx.xYearsScale(currentYear))
@@ -1552,14 +1574,14 @@ function updateComparisonAttr(player1, player2){
         .datum(historyPlayer1)
         .attr("d", linePlayer1)
         .attr("fill", "none")
-        .attr("stroke", "lightblue")
+        .attr("stroke", "#4DD0F7")
         .attr("stroke-width", 2);
 
     player2Plot.append("path")
         .datum(historyPlayer2)
         .attr("d", linePlayer2)
         .attr("fill", "none")
-        .attr("stroke", "lightblue")
+        .attr("stroke", "#F76590")
         .attr("stroke-width", 2);
 
 }
