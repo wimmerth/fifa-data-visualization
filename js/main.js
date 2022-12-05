@@ -7,7 +7,8 @@ const ctx = {
     grassGreen: "#338033",
     SELECTION: null,
     comparisonAttr: "overall",
-    comparisonAttrRef: "Overall"
+    comparisonAttrRef: "Overall",
+    comparisonColors: ["#4DD0F7","#F76590"]
 }
 
 function updateYear(input) {
@@ -90,7 +91,7 @@ function loadData() {
 function initPlots(data) {
     initBestPlayerList(data);
     groupStatsRadar(data);
-    playerStatsRadar(data);
+    // playerStatsRadar(data);
     // statsRadar(data);
 }
 
@@ -100,7 +101,7 @@ function updatePlotsOnSelection(year, selection) {
     ctx.currentDataSelection = data;
     updateBestPlayerList(data);
     groupStatsRadar(data);
-    playerStatsRadar(data);
+    // playerStatsRadar(data);
     // statsRadar(data);
 }
 
@@ -373,6 +374,7 @@ function initBestPlayerList(playerList) {
     bestPlayerButtons.on("click", (event, d) => {
         console.log("Clicked on " + d.short_name);
         updatePlayerDetailView(d);
+        playerStatsRadar([d]);
     });
 }
 
@@ -397,34 +399,53 @@ function updateBestPlayerList(playerList) {
 //---------------------------------------------------------------------------------------------------------
 //---------------------------------------------STATS RADAR-------------------------------------------------
 
-function summaryStats(playerList) {
+function summaryStats(playerList, aggregate) {
     // compute median, 25th and 75th percentile, min and max for each relevant feature
     let features = ["pace", "shooting", "passing", "dribbling", "defending", "physic"];
     let features_nice_names = ["Pace", "Shooting", "Passing", "Dribbling", "Defending", "Physic"];
     let gk_features = ["gk_diving", "gk_handling", "gk_kicking", "gk_reflexes", "gk_speed", "gk_positioning"];
     let gk_features_nice_names = ["Diving", "Handling", "Kicking", "Reflexes", "Speed", "Positioning"];
-    // filter for top 100 players
-    playerList = playerList.sort((a, b) => b.overall - a.overall).slice(0, 100);
-    let statsList = ["max", "q3", "median", "q1", "min"];
-    let stats = {};
-    for (let stat of statsList) {
-        stats[stat] = new Array();
-    }
-    for (let feature of features) {
-        let values = playerList.map(d => parseFloat(d[feature]));
-        let nice_feature = features_nice_names[features.indexOf(feature)];
-        values.sort((a, b) => a - b);
-        stats["median"].push({ axis: nice_feature, value: d3.median(values) });
-        stats["min"].push({ axis: nice_feature, value: d3.min(values) });
-        stats["max"].push({ axis: nice_feature, value: d3.max(values) });
-        stats["q1"].push({ axis: nice_feature, value: d3.quantile(values, 0.25) });
-        stats["q3"].push({ axis: nice_feature, value: d3.quantile(values, 0.75) });
-    }
-    // stats = Object.values(stats)
     let orderedStats = new Array();
-    for (let stat of statsList) {
-        orderedStats.push({ "name": stat, "values": stats[stat] });
+    let stats = {};
+    // filter for top 100 players
+    
+    if(aggregate == false){
+        for (let stat of playerList) {
+            stats[stat] = new Array();
+        }
+        for (let feature of features) {
+            let values = playerList.map(d => parseFloat(d[feature]));
+            let nice_feature = features_nice_names[features.indexOf(feature)];
+            playerList.forEach((player, i) => stats[player].push({ axis: nice_feature, value: values[i] }))
+        }
+        playerList.forEach((player) =>{
+            orderedStats.push({ "name": player.short_name, "values": stats[player] });
+        })
+        console.log(orderedStats)
     }
+    else{
+        playerList = playerList.sort((a, b) => b.overall - a.overall).slice(0, 100);
+        let statsList = ["max", "q3", "median", "q1", "min"];
+        for (let stat of statsList) {
+            stats[stat] = new Array();
+        }
+        for (let feature of features) {
+            let values = playerList.map(d => parseFloat(d[feature]));
+            let nice_feature = features_nice_names[features.indexOf(feature)];
+            values.sort((a, b) => a - b);
+            stats["median"].push({ axis: nice_feature, value: d3.median(values) });
+            stats["min"].push({ axis: nice_feature, value: d3.min(values) });
+            stats["max"].push({ axis: nice_feature, value: d3.max(values) });
+            stats["q1"].push({ axis: nice_feature, value: d3.quantile(values, 0.25) });
+            stats["q3"].push({ axis: nice_feature, value: d3.quantile(values, 0.75) });
+        }
+        // stats = Object.values(stats)
+        for (let stat of statsList) {
+            orderedStats.push({ "name": stat, "values": stats[stat] });
+        }
+        console.log(orderedStats);
+    }
+
     return orderedStats;
 }
 
@@ -447,7 +468,7 @@ function groupStatsRadar(data) {
         roundStrokes: true
     };
 
-    createRadar("statsG", "rootG", data, cfg);
+    createRadar("statsG", "rootG", data, cfg, true);
 
 }
 
@@ -470,35 +491,17 @@ function playerStatsRadar(data) {
         roundStrokes: true
     };
 
-    createRadar("playerStatsG", "playerDetailG", data, cfg);
+    createRadar("playerStatsG", "playerDetailG", data, cfg, false);
 
 }
 
-function createRadar(id, rootId, playerList, cfg) {
+function createRadar(id, rootId, playerList, cfg, aggregate) {
     if (document.getElementById(id) != null) {
         document.getElementById(id).remove();
     }
 
-    // let cfg = {
-    //     x: 850,
-    //     y: 700,
-    //     w: 300,				//width of the circle
-    //     h: 300,				//height of the circle
-    //     levels: 3,				//levels of inner circles
-    //     maxValue: 100, 			//value that the biggest circle will represent
-    //     labelFactor: 1.25, 	//distance between outer circle and label
-    //     wrapWidth: 60, 		//number of pixels after which a label needs to be given a new line
-    //     opacityArea: 0.35, 	//opacity of the area of the blob
-    //     dotRadius: 4, 			//size of the colored circles of each blog
-    //     opacityCircles: 0.1, 	//opacity of the circles of each blob
-    //     strokeWidth: 2, 		//width of the stroke around each blob
-    //     // color: d3.scaleOrdinal(d3.schemeCategory10),
-    //     color: (d) => "lightblue",
-    //     roundStrokes: true
-    // };
-
     // let allAxis = [findAxis(playerList)];
-    let allAxis = summaryStats(playerList);
+    let allAxis = summaryStats(playerList, aggregate);
     let axisNames = (allAxis[0]["values"].map(function (i, j) { return i.axis }));	//names of each axis
     let total = axisNames.length;					//total number of different axes
     let radius = Math.min(cfg.w / 2, cfg.h / 2); 	//radius of the outermost circle
@@ -519,18 +522,6 @@ function createRadar(id, rootId, playerList, cfg) {
     // circular grid
     //wrapper for the grid & axes
     let axisGrid = statsRadar.append("g").attr("class", "axisWrapper");
-
-    //draw the background circles
-    /*axisGrid.selectAll(".levels")
-        .data(d3.range(1,(cfg.levels+1)).reverse())
-        .enter()
-        .append("circle")
-        .attr("class", "gridCircle")
-        .attr("r", function(d, i){return radius/cfg.levels*d;})
-        .style("fill", "#CDCDCD")
-        .style("stroke", "#CDCDCD")
-        .style("fill-opacity", cfg.opacityCircles)
-        .style("filter" , "url(#glow)");*/
 
     //show percentage of each level
     axisGrid.selectAll(".axisLabel")
@@ -598,7 +589,11 @@ function createRadar(id, rootId, playerList, cfg) {
         .style("fill", function (d, i) {
             if (["q1", "median", "q3"].includes(d.name)) {
                 return cfg.color(i);
-            } else {
+            } 
+            else if(!(["q1", "median", "q3", "min", "max"].includes(d.name))){
+                return ctx.comparisonColors[i];
+            }
+            else {
                 return "none";
             }
         })
@@ -634,19 +629,6 @@ function createRadar(id, rootId, playerList, cfg) {
         })
         .style("fill", "none")
         .style("filter", "url(#glow)");
-    /*
-    //append the circles
-    blobWrapper.selectAll(".radarCircle")
-        .data(function(d,i) { return d.values; })
-        .enter().append("circle")
-        .attr("class", "radarCircle")
-        .attr("r", cfg.dotRadius)
-        .attr("cx", function(d,i){ return radiusScale(d.value) * Math.cos(angleSlice*i - Math.PI/2); })
-        .attr("cy", function(d,i){ return radiusScale(d.value) * Math.sin(angleSlice*i - Math.PI/2); })
-        .style("fill", function(d,i,j) { return cfg.color(j); })
-        .style("fill-opacity", 0.8);
-    */
-
 }
 
 //---------------------------------------------------------------------------------------------------------
@@ -1523,10 +1505,12 @@ function updateComparison1(playerNo, player){
     ctx[`curPlayer${playerNo}y`] = history[1]
 
     let lineStart = d3.line()
+        .curve(d3.curveLinear)
         .x(ctx.xYearsScale(2015))
         .y(d => ctx.yRatingScale(d[1]))
 
     let line = d3.line()
+        .curve(d3.curveLinear)
         .x(d => ctx.xYearsScale(d[0]))
         .y(d => ctx.yRatingScale(d[1]));
 
@@ -1538,7 +1522,8 @@ function updateComparison1(playerNo, player){
             .attr("stroke-width", 2)
             .attr("d", lineStart)
             .transition()
-            .duration(500)
+            .ease(d3.easeCubic)
+            .duration(1000)
             .attr("d", line);
     }
     else{
@@ -1549,7 +1534,8 @@ function updateComparison1(playerNo, player){
             .attr("stroke-width", 2)
             .attr("d", lineStart)
             .transition()
-            .duration(500)
+            .ease(d3.easeCubic)
+            .duration(1000)
             .attr("d", line);
     }
     
@@ -1559,6 +1545,9 @@ function updateComparison1(playerNo, player){
     //     .attr("r", 5)
     //     .attr("fill", "red");
     // attributeHistoryPlot(player, "overall", linePlot, 700, 400);
+    // data = ctx.playersPerYear[currentYear];
+    console.log(player)
+    comparisonStatsRadar([player]);
 
 }
 
@@ -1589,10 +1578,12 @@ function updateComparisonAttr(player1, player2){
     //     .y(d => ctx.yRatingScale(ctx.curPlayery))
 
     let linePlayer1 = d3.line()
+        .curve(d3.curveLinear)
         .x(d => ctx.xYearsScale(d[0]))
         .y(d => ctx.yRatingScale(d[1]));
 
     let linePlayer2 = d3.line()
+        .curve(d3.curveLinear)
         .x(d => ctx.xYearsScale(d[0]))
         .y(d => ctx.yRatingScale(d[1]));
 
@@ -1607,16 +1598,16 @@ function updateComparisonAttr(player1, player2){
         .datum(historyPlayer1)
         .attr("d", linePlayer1)
         .attr("fill", "none")
-        .attr("stroke", "#4DD0F7")
+        .attr("stroke", ctx.comparisonColors[0])
         .attr("stroke-width", 2);
 
     player2Plot.append("path")
         .datum(historyPlayer2)
         .attr("d", linePlayer2)
         .attr("fill", "none")
-        .attr("stroke", "#F76590")
+        .attr("stroke", ctx.comparisonColors[1])
         .attr("stroke-width", 2);
-    
+        
     d3.select("#comparisonTitle")
         .append("text")
         .attr("x", 1070)
@@ -1625,5 +1616,29 @@ function updateComparisonAttr(player1, player2){
         .attr("fill", "#18414e")
         .attr("text-anchor", "end")
         .text(ctx.comparisonAttrRef);
+
+        comparisonStatsRadar([player1, player2]);
+}
+
+function comparisonStatsRadar(data) {
+    let cfg = {
+        x: 725,
+        y: 745,
+        w: 350,				//width of the circle
+        h: 350,				//height of the circle
+        levels: 3,				//levels of inner circles
+        maxValue: 100, 			//value that the biggest circle will represent
+        labelFactor: 1.25, 	//distance between outer circle and label
+        wrapWidth: 60, 		//number of pixels after which a label needs to be given a new line
+        opacityArea: 0.35, 	//opacity of the area of the blob
+        dotRadius: 4, 			//size of the colored circles of each blog
+        opacityCircles: 0.1, 	//opacity of the circles of each blob
+        strokeWidth: 2, 		//width of the stroke around each blob
+        // color: d3.scaleOrdinal(d3.schemeCategory10),
+        color: (d) => "lightblue",
+        roundStrokes: true
+    };
+
+    createRadar("comparisonRadarG", "playersComparisonG", data, cfg, false);
 
 }
