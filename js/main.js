@@ -399,7 +399,7 @@ function updateBestPlayerList(playerList) {
 //---------------------------------------------------------------------------------------------------------
 //---------------------------------------------STATS RADAR-------------------------------------------------
 
-function summaryStats(playerList, aggregate) {
+function summaryStats(playerList, task) {
     // compute median, 25th and 75th percentile, min and max for each relevant feature
     let features = ["pace", "shooting", "passing", "dribbling", "defending", "physic"];
     let features_nice_names = ["Pace", "Shooting", "Passing", "Dribbling", "Defending", "Physic"];
@@ -409,7 +409,7 @@ function summaryStats(playerList, aggregate) {
     let stats = {};
     // filter for top 100 players
     
-    if(aggregate == false){
+    if(task != "group"){
         for (let player of playerList) {
             stats[player.sofifa_id] = new Array();
         }
@@ -471,7 +471,7 @@ function groupStatsRadar(data) {
         roundStrokes: true
     };
 
-    createRadar("statsG", "rootG", data, cfg, true);
+    createRadar("statsG", "rootG", data, cfg, "group");
 
 }
 
@@ -494,17 +494,17 @@ function playerStatsRadar(data) {
         roundStrokes: true
     };
 
-    createRadar("playerStatsG", "playerDetailG", data, cfg, false);
+    createRadar("playerStatsG", "playerDetailG", data, cfg, "individual");
 
 }
 
-function createRadar(id, rootId, playerList, cfg, aggregate) {
+function createRadar(id, rootId, playerList, cfg, task) {
     if (document.getElementById(id) != null) {
         document.getElementById(id).remove();
     }
 
     // let allAxis = [findAxis(playerList)];
-    let allAxis = summaryStats(playerList, aggregate);
+    let allAxis = summaryStats(playerList, task);
     let axisNames = (allAxis[0]["values"].map(function (i, j) { return i.axis }));	//names of each axis
     let total = axisNames.length;					//total number of different axes
     let radius = Math.min(cfg.w / 2, cfg.h / 2); 	//radius of the outermost circle
@@ -590,15 +590,20 @@ function createRadar(id, rootId, playerList, cfg, aggregate) {
         .attr("class", "radarArea")
         .attr("d", function (d, i) { return radarLine(d.values); })
         .style("fill", function (d, i) {
-            if (["q1", "median", "q3"].includes(d.name)) {
-                return cfg.color(i);
-            } 
-            else if(!(["q1", "median", "q3", "min", "max"].includes(d.name))){
+            if(task == "comparison"){
                 return ctx.comparisonColors[i];
             }
-            else {
-                return "none";
+            else if(task == "individual"){
+                return cfg.color(i);
             }
+            else{
+                if (["q1", "median", "q3"].includes(d.name)) {
+                    return cfg.color(i);
+                }
+                else {
+                    return "none";
+                }
+            } 
         })
         .style("fill-opacity", cfg.opacityArea)
         .on('mouseover', function (d, i) {
@@ -1642,6 +1647,6 @@ function comparisonStatsRadar(data) {
         roundStrokes: true
     };
 
-    createRadar("comparisonRadarG", "playersComparisonG", data, cfg, false);
+    createRadar("comparisonRadarG", "playersComparisonG", data, cfg, "comparison");
 
 }
