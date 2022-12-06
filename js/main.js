@@ -410,16 +410,19 @@ function summaryStats(playerList, aggregate) {
     // filter for top 100 players
     
     if(aggregate == false){
-        for (let stat of playerList) {
-            stats[stat] = new Array();
+        for (let player of playerList) {
+            stats[player.sofifa_id] = new Array();
         }
         for (let feature of features) {
             let values = playerList.map(d => parseFloat(d[feature]));
             let nice_feature = features_nice_names[features.indexOf(feature)];
-            playerList.forEach((player, i) => stats[player].push({ axis: nice_feature, value: values[i] }))
+            // console.log(nice_feature, values);
+            playerList.forEach((player, i) => stats[player.sofifa_id].push({ axis: nice_feature, value: values[i] }))
+            // console.log(stats)
+            // break
         }
         playerList.forEach((player) =>{
-            orderedStats.push({ "name": player.short_name, "values": stats[player] });
+            orderedStats.push({ "name": player.short_name, "values": stats[player.sofifa_id] });
         })
         console.log(orderedStats)
     }
