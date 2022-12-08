@@ -1452,7 +1452,7 @@ function drawComparisonAxis(x,y){
     let axis = d3.select("g#playersComparisonG").append("g").attr("id", "comparison1");
 
     ctx.yRatingScale = d3.scaleLinear()
-        .domain([0, 100])
+        .domain([70, 100])
         .range([y+height, y]);
 
     ctx.xYearsScale = d3.scaleBand()
