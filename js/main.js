@@ -1570,44 +1570,44 @@ function updateComparisonAttr(player1, player2){
     let player1Plot = d3.select(`#player1LinePlot`)
     let player2Plot = d3.select(`#player2LinePlot`)
 
-    let currentYear = player1.year;
-    let historyPlayer1 = attributeHistory(player1.sofifa_id, ctx.comparisonAttr);
-    let historyPlayer2 = attributeHistory(player2.sofifa_id, ctx.comparisonAttr);
-    historyPlayer1 = historyPlayer1.filter(function (d) {
-        return d != null;
-    });
-    historyPlayer2 = historyPlayer2.filter(function (d) {
-        return d != null;
-    });
+    // let currentYear = ctx.comparisonPlayers[1].year;
+    if(ctx.comparisonPlayers[1] != null){
+        let historyPlayer1 = attributeHistory(ctx.comparisonPlayers[1].sofifa_id, ctx.comparisonAttr);
+        historyPlayer1 = historyPlayer1.filter(function (d) {
+            return d != null;
+        });
+        let linePlayer1 = d3.line()
+            .curve(d3.curveLinear)
+            .x(d => ctx.xYearsScale(d[0]))
+            .y(d => ctx.yRatingScale(d[1]));
+        document.getElementById(`player1LinePlot`).innerHTML = '';
+        player1Plot.append("path")
+            .datum(historyPlayer1)
+            .attr("d", linePlayer1)
+            .attr("fill", "none")
+            .attr("stroke", ctx.comparisonColors[0])
+            .attr("stroke-width", 2);
 
-    let linePlayer1 = d3.line()
-        .curve(d3.curveLinear)
-        .x(d => ctx.xYearsScale(d[0]))
-        .y(d => ctx.yRatingScale(d[1]));
-
-    let linePlayer2 = d3.line()
-        .curve(d3.curveLinear)
-        .x(d => ctx.xYearsScale(d[0]))
-        .y(d => ctx.yRatingScale(d[1]));
-
-    document.getElementById(`player1LinePlot`).innerHTML = '';
-    document.getElementById(`player2LinePlot`).innerHTML = '';
-    document.getElementById(`comparisonTitle`).innerHTML = '';
-
-    player1Plot.append("path")
-        .datum(historyPlayer1)
-        .attr("d", linePlayer1)
-        .attr("fill", "none")
-        .attr("stroke", ctx.comparisonColors[0])
-        .attr("stroke-width", 2);
-
-    player2Plot.append("path")
-        .datum(historyPlayer2)
-        .attr("d", linePlayer2)
-        .attr("fill", "none")
-        .attr("stroke", ctx.comparisonColors[1])
-        .attr("stroke-width", 2);
-        
+    }
+    if(ctx.comparisonPlayers[2] != null){
+        let historyPlayer2 = attributeHistory(ctx.comparisonPlayers[2].sofifa_id, ctx.comparisonAttr);
+        historyPlayer2 = historyPlayer2.filter(function (d) {
+            return d != null;
+        });
+        let linePlayer2 = d3.line()
+            .curve(d3.curveLinear)
+            .x(d => ctx.xYearsScale(d[0]))
+            .y(d => ctx.yRatingScale(d[1]));
+        document.getElementById(`player2LinePlot`).innerHTML = '';
+        player2Plot.append("path")
+            .datum(historyPlayer2)
+            .attr("d", linePlayer2)
+            .attr("fill", "none")
+            .attr("stroke", ctx.comparisonColors[1])
+            .attr("stroke-width", 2);
+    
+    }
+    document.getElementById(`comparisonTitle`).innerHTML = '';   
     d3.select("#comparisonTitle")
         .append("text")
         .attr("x", 1070)
@@ -1617,7 +1617,7 @@ function updateComparisonAttr(player1, player2){
         .attr("text-anchor", "end")
         .text(ctx.comparisonAttrRef);
 
-    drawRadar("comparisonRadarG", "playersComparisonG", [player1, player2], getComparisonStatsCfg(), "comparison");
+    drawRadar("comparisonRadarG", "playersComparisonG", Object.values(ctx.comparisonPlayers), getComparisonStatsCfg(), "comparison");
 
 }
 
