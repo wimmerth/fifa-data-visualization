@@ -1345,6 +1345,7 @@ function updateYAxisScale(){
     })
     let min = d3.min(min_values, d => d);
     min = Math.floor(min / 10) * 10
+    console.log("min", min)
     ctx.yRatingScale = d3.scaleLinear()
         .domain([min-10, 100])
         .range([425, 25]);
