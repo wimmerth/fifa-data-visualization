@@ -1294,6 +1294,7 @@ function initSelectors(playerList){
         .on("click", (event, d) => {
             console.log("Clicked on " + d.short_name);
             ctx.comparisonPlayers[parseInt(id)+1] = d
+            updateYAxisScale();
             showPlayerDropdown(ids[id]);
             updatePlayerComparisonView(parseInt(id)+1, d);
             updateComparison1(parseInt(id)+1, d);
@@ -1316,6 +1317,7 @@ function initSelectors(playerList){
             console.log("Clicked on " + attrRef[d]);
             ctx.comparisonAttr = attrRef[d]
             ctx.comparisonAttrRef = d
+            updateYAxisScale();
             showPlayerDropdown("attrSelectionContent");
             updateComparisonAttr(ctx.comparisonPlayers[1], ctx.comparisonPlayers[2]);
         })
@@ -1328,6 +1330,32 @@ function initSelectors(playerList){
         .attr("fill", "#18414e")
         .text(d => d);
 }
+
+
+function updateYAxisScale(){
+    let attr = ctx.comparisonAttr;
+    let min_values = []
+    Object.keys(ctx.comparisonPlayers).forEach((key) => {
+        console.log(ctx.comparisonPlayers[key][attr]);
+        let history = attributeHistory(ctx.comparisonPlayers[key].sofifa_id, attr);
+        let history_min = d3.min(history, d => {
+            return d[1];
+        });
+        min_values.push(history_min);
+    })
+    let min = d3.min(min_values, d => d);
+    min = Math.floor(min / 10) * 10
+    ctx.yRatingScale = d3.scaleLinear()
+        .domain([min-10, 100])
+        .range([425, 25]);
+
+    d3.select("#yAxisComp1")
+        .transition()
+        .duration(500)
+        .call(d3.axisLeft(ctx.yRatingScale));
+}
+
+
 
 function showPlayerDropdown(dropdownId) {
     document.getElementById(dropdownId).classList.toggle("show");
@@ -1452,7 +1480,7 @@ function drawComparisonAxis(x,y){
     let axis = d3.select("g#playersComparisonG").append("g").attr("id", "comparison1");
 
     ctx.yRatingScale = d3.scaleLinear()
-        .domain([70, 100])
+        .domain([0, 100])
         .range([y+height, y]);
 
     ctx.xYearsScale = d3.scaleBand()
@@ -1461,12 +1489,12 @@ function drawComparisonAxis(x,y){
         .padding([0.8])
     // x axis
     axis.append("g")
-        .attr("id", "yAxisComp1")
+        .attr("id", "xAxisComp1")
         .attr("transform",`translate(0,${y+height})`)
         .call(d3.axisBottom(ctx.xYearsScale));
     // y axis
     axis.append("g")
-        .attr("id", "xAxisComp1")
+        .attr("id", "yAxisComp1")
         .attr("transform", `translate(${x},${y})`)
         .call(d3.axisLeft(ctx.yRatingScale));
     // Y axis label:
@@ -1569,10 +1597,12 @@ function updateComparison1(playerNo, player){
 function updateComparisonAttr(player1, player2){
     let player1Plot = d3.select(`#player1LinePlot`)
     let player2Plot = d3.select(`#player2LinePlot`)
+    let historyPlayer1 = new Object();
+    let historyPlayer2 = new Object();
 
     // let currentYear = ctx.comparisonPlayers[1].year;
     if(ctx.comparisonPlayers[1] != null){
-        let historyPlayer1 = attributeHistory(ctx.comparisonPlayers[1].sofifa_id, ctx.comparisonAttr);
+        historyPlayer1 = attributeHistory(ctx.comparisonPlayers[1].sofifa_id, ctx.comparisonAttr);
         historyPlayer1 = historyPlayer1.filter(function (d) {
             return d != null;
         });
@@ -1590,7 +1620,7 @@ function updateComparisonAttr(player1, player2){
 
     }
     if(ctx.comparisonPlayers[2] != null){
-        let historyPlayer2 = attributeHistory(ctx.comparisonPlayers[2].sofifa_id, ctx.comparisonAttr);
+        historyPlayer2 = attributeHistory(ctx.comparisonPlayers[2].sofifa_id, ctx.comparisonAttr);
         historyPlayer2 = historyPlayer2.filter(function (d) {
             return d != null;
         });
