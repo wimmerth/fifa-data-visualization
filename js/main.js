@@ -44,11 +44,32 @@ function createViz() {
         .attr("width", ctx.width)
         .attr("height", ctx.height)
         .attr("fill", ctx.backgroundGrey);
-
+    showLoadingScreen();
     loadPlayerPositions();
     initPlayersComparisonView(); //test
     initPlayerDetailView();
     loadData();
+}
+
+function showLoadingScreen() {
+    JsLoadingOverlay.setOptions({
+        'overlayBackgroundColor': '#18414e',
+        'overlayOpacity': 0.6,
+        'spinnerIcon': 'line-scale',
+        'spinnerColor': 'white',
+        'spinnerSize': '2x',
+        'overlayIDName': 'overlay',
+        'spinnerIDName': 'spinner',
+        'offsetY': 0,
+        'offsetX': 0,
+        'lockScroll': false,
+        'containerID': null,
+    });
+    JsLoadingOverlay.show();
+}
+
+function hideLoadingScreen() {
+    JsLoadingOverlay.hide();
 }
 
 function loadPlayerPositions() {
@@ -85,6 +106,7 @@ function loadData() {
         ctx.currentDataSelection = playersPerYear[ctx.YEAR];
         initPlots(ctx.playersPerYear[ctx.YEAR]);
         initSelectors(ctx.playersPerYear[ctx.YEAR]); // test
+        hideLoadingScreen();
     }).catch((error) => {
         console.log(error);
     });
@@ -626,7 +648,7 @@ function drawRadar(id, rootId, playerList, cfg, task){
         .style("fill-opacity", cfg.opacityArea)
         .on('mouseover', function (d, i) {
             //Dim all blobs
-            d3.selectAll(".radarArea")
+            blobWrapper.selectAll(".radarArea")
                 .transition().duration(200)
                 .style("fill-opacity", 0.1);
             //Bring back the hovered over blob
@@ -636,7 +658,7 @@ function drawRadar(id, rootId, playerList, cfg, task){
         })
         .on('mouseout', function () {
             //Bring back all blobs
-            d3.selectAll(".radarArea")
+            blobWrapper.selectAll(".radarArea")
                 .transition().duration(200)
                 .style("fill-opacity", cfg.opacityArea);
         });
