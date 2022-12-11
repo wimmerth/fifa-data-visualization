@@ -8,7 +8,7 @@ const ctx = {
     SELECTION: null,
     comparisonAttr: "overall",
     comparisonAttrRef: "Overall",
-    comparisonColors: ["#4DD0F7","#F76590"],
+    comparisonColors: ["#4DD0F7", "#F76590"],
     comparisonPlayers: {},
     radarAxisNames: ["Pace", "Shooting", "Passing", "Dribbling", "Defending", "Physic"],
 }
@@ -34,7 +34,7 @@ function createViz() {
     rootG.append("g").attr("id", "footballfieldG");
     rootG.append("g").attr("id", "bestPlayerListG");
     rootG.append("g").attr("id", "playerDetailG");
-    rootG.append("g").attr("id","playersComparisonG");
+    rootG.append("g").attr("id", "playersComparisonG");
     // rootG.append("g").attr("id","statsG");
 
     let background = d3.select("#bkgG");
@@ -44,11 +44,32 @@ function createViz() {
         .attr("width", ctx.width)
         .attr("height", ctx.height)
         .attr("fill", ctx.backgroundGrey);
-
+    showLoadingScreen();
     loadPlayerPositions();
     initPlayersComparisonView(); //test
     initPlayerDetailView();
     loadData();
+}
+
+function showLoadingScreen() {
+    JsLoadingOverlay.setOptions({
+        'overlayBackgroundColor': '#18414e',
+        'overlayOpacity': 0.6,
+        'spinnerIcon': 'line-scale',
+        'spinnerColor': 'white',
+        'spinnerSize': '2x',
+        'overlayIDName': 'overlay',
+        'spinnerIDName': 'spinner',
+        'offsetY': 0,
+        'offsetX': 0,
+        'lockScroll': false,
+        'containerID': null,
+    });
+    JsLoadingOverlay.show();
+}
+
+function hideLoadingScreen() {
+    JsLoadingOverlay.hide();
 }
 
 function loadPlayerPositions() {
@@ -85,6 +106,7 @@ function loadData() {
         ctx.currentDataSelection = playersPerYear[ctx.YEAR];
         initPlots(ctx.playersPerYear[ctx.YEAR]);
         initSelectors(ctx.playersPerYear[ctx.YEAR]); // test
+        hideLoadingScreen();
     }).catch((error) => {
         console.log(error);
     });
@@ -414,8 +436,8 @@ function summaryStats(playerList, task) {
     let orderedStats = new Array();
     let stats = {};
     // filter for top 100 players
-    
-    if(task != "group"){
+
+    if (task != "group") {
         for (let player in playerList) {
             stats[player] = new Array();
         }
@@ -424,11 +446,11 @@ function summaryStats(playerList, task) {
             let nice_feature = features_nice_names[features.indexOf(feature)];
             playerList.forEach((player, i) => stats[i].push({ axis: nice_feature, value: values[i] }))
         }
-        playerList.forEach((player, i) =>{
+        playerList.forEach((player, i) => {
             orderedStats.push({ "name": player.short_name, "values": stats[i] });
         })
     }
-    else{
+    else {
         playerList = playerList.sort((a, b) => b.overall - a.overall).slice(0, 100);
         let statsList = ["max", "q3", "median", "q1", "min"];
         for (let stat of statsList) {
@@ -524,7 +546,7 @@ function createRadar(id, rootId, playerList, cfg, task) {
         .attr("dy", "0.4em")
         .style("font-size", "10px")
         .attr("fill", function (d, i) {
-            if(task == "group"){ return "white"; }
+            if (task == "group") { return "white"; }
             else { return "#18414e"; }
         })
         .text(function (d, i) { return (cfg.maxValue * d / cfg.levels).toFixed(0); });
@@ -544,7 +566,7 @@ function createRadar(id, rootId, playerList, cfg, task) {
         .attr("y2", function (d, i) { return radiusScale(cfg.maxValue * 1.1) * Math.sin(angleSlice * i - Math.PI / 2); })
         .attr("class", "line")
         .style("stroke", function (d, i) {
-            if(task == "group"){ return "white"; }
+            if (task == "group") { return "white"; }
             else { return tinycolor("#18414e"); }
         })
         .style("stroke-width", "2px");
@@ -555,7 +577,7 @@ function createRadar(id, rootId, playerList, cfg, task) {
         .style("font-size", "11px")
         .attr("text-anchor", "middle")
         .attr("fill", function (d, i) {
-            if(task == "group"){ return "white"; }
+            if (task == "group") { return "white"; }
             else { return "#18414e"; }
         })
         .attr("dy", "0.35em")
@@ -563,11 +585,11 @@ function createRadar(id, rootId, playerList, cfg, task) {
         .attr("y", function (d, i) { return radiusScale(cfg.maxValue * cfg.labelFactor) * Math.sin(angleSlice * i - Math.PI / 2); })
         .text(string => { return string.charAt(0).toUpperCase() + string.slice(1) });
 }
-    
-    
-    
-function drawRadar(id, rootId, playerList, cfg, task){
-    while(document.getElementById(`${task}RadarWrapper`) != null) {
+
+
+
+function drawRadar(id, rootId, playerList, cfg, task) {
+    while (document.getElementById(`${task}RadarWrapper`) != null) {
         document.getElementById(`${task}RadarWrapper`).remove();
     }
     let allAxis = summaryStats(playerList, task);
@@ -582,12 +604,12 @@ function drawRadar(id, rootId, playerList, cfg, task){
         .domain([0, 100]);
 
     let statsRadar = d3.select(`#${id}`);
-        // radar chart blobs
-        // radial line function
+    // radar chart blobs
+    // radial line function
     var radarLine = d3.lineRadial()
         .radius(function (d) { return radiusScale(d.value); })
         .angle(function (d, i) { return i * angleSlice; });
-        
+
     if (cfg.roundStrokes) {
         radarLine.curve(d3.curveLinearClosed);
     }
@@ -606,27 +628,27 @@ function drawRadar(id, rootId, playerList, cfg, task){
         .attr("class", "radarArea")
         .attr("d", function (d, i) { return radarLine(d.values); })
         .style("fill", function (d, i) {
-            if(task == "comparison"){
+            if (task == "comparison") {
                 // player selected on selection 1 or 2?
                 compPosition = Object.keys(ctx.comparisonPlayers).find(key => ctx.comparisonPlayers[key].short_name === d.name);
-                return ctx.comparisonColors[compPosition-1];
+                return ctx.comparisonColors[compPosition - 1];
             }
-            else if(task == "individual"){
+            else if (task == "individual") {
                 return cfg.color(i);
             }
-            else{
+            else {
                 if (["q1", "median", "q3"].includes(d.name)) {
                     return cfg.color(i);
                 }
                 else {
                     return "none";
                 }
-            } 
+            }
         })
         .style("fill-opacity", cfg.opacityArea)
         .on('mouseover', function (d, i) {
             //Dim all blobs
-            d3.selectAll(".radarArea")
+            blobWrapper.selectAll(".radarArea")
                 .transition().duration(200)
                 .style("fill-opacity", 0.1);
             //Bring back the hovered over blob
@@ -636,7 +658,7 @@ function drawRadar(id, rootId, playerList, cfg, task){
         })
         .on('mouseout', function () {
             //Bring back all blobs
-            d3.selectAll(".radarArea")
+            blobWrapper.selectAll(".radarArea")
                 .transition().duration(200)
                 .style("fill-opacity", cfg.opacityArea);
         });
@@ -754,7 +776,7 @@ function initPlayerDetailView() {
         .attr("width", 40)
         .attr("height", 40)
         .attr("xlink:href", "https://cdn.sofifa.net/flags/de.png");
-    
+
     potentialG = playerDetailG.append("g")
         .attr("id", "playerPotentialG")
         .attr("transform", "translate(375, 150)");
@@ -804,7 +826,7 @@ function initPlayerDetailView() {
         .attr("fill", "#18414e")
         .attr("text-anchor", "middle")
         .text("Overall");
-    
+
     playerDetailG.append("circle")
         .attr("id", "OVR_overlay")
         .attr("cx", 375)
@@ -813,44 +835,106 @@ function initPlayerDetailView() {
         .attr("fill-opacity", 0);
 
     playerDetailG.append("text")
-        .attr("id", "playerAge")
         .attr("x", 10)
-        .attr("y", 150)
-        .attr("font-size", 20)
+        .attr("y", 140)
+        .attr("font-size", 11)
         .attr("fill", "#18414e")
         .text("Age");
 
     playerDetailG.append("text")
-        .attr("id", "playerHeight")
+        .attr("id", "playerAge")
         .attr("x", 10)
-        .attr("y", 180)
-        .attr("font-size", 20)
+        .attr("y", 170)
+        .attr("font-size", 30)
+        .attr("font-weight", "bold")
+        .attr("fill", "#18414e")
+        .text("XY");
+
+    playerDetailG.append("text")
+        .attr("x", 10)
+        .attr("y", 190)
+        .attr("font-size", 11)
         .attr("fill", "#18414e")
         .text("Height");
 
     playerDetailG.append("text")
-        .attr("id", "playerWeight")
+        .attr("id", "playerHeight")
         .attr("x", 10)
-        .attr("y", 210)
-        .attr("font-size", 20)
+        .attr("y", 220)
+        .attr("font-size", 30)
+        .attr("font-weight", "bold")
+        .attr("fill", "#18414e")
+        .text("XY");
+
+    playerDetailG.append("text")
+        .attr("x", 130)
+        .attr("y", 190)
+        .attr("font-size", 11)
         .attr("fill", "#18414e")
         .text("Weight");
 
     playerDetailG.append("text")
-        .attr("id", "playerValue")
+        .attr("id", "playerWeight")
+        .attr("x", 130)
+        .attr("y", 220)
+        .attr("font-size", 30)
+        .attr("font-weight", "bold")
+        .attr("fill", "#18414e")
+        .text("XY");
+
+    playerDetailG.append("text")
         .attr("x", 10)
         .attr("y", 240)
-        .attr("font-size", 20)
+        .attr("font-size", 11)
         .attr("fill", "#18414e")
-        .text("Value");
+        .text("Value (in EUR)");
+
+    playerDetailG.append("text")
+        .attr("id", "playerValue")
+        .attr("x", 10)
+        .attr("y", 270)
+        .attr("font-size", 30)
+        .attr("font-weight", "bold")
+        .attr("fill", "#18414e")
+        .text("XY");
+
+    playerDetailG.append("text")
+        .attr("x", 130)
+        .attr("y", 240)
+        .attr("font-size", 11)
+        .attr("fill", "#18414e")
+        .text("Wage (in EUR)");
 
     playerDetailG.append("text")
         .attr("id", "playerWage")
-        .attr("x", 10)
+        .attr("x", 130)
         .attr("y", 270)
-        .attr("font-size", 20)
+        .attr("font-size", 30)
+        .attr("font-weight", "bold")
         .attr("fill", "#18414e")
-        .text("Wage");
+        .text("XY");
+
+    playerDetailG.append("text")
+        .attr("x", 10)
+        .attr("y", 290)
+        .attr("font-size", 11)
+        .attr("fill", "#18414e")
+        .text("Skill Moves");
+    
+    playerDetailG.append("g")
+        .attr("id", "skillBarG")
+        .attr("transform", "translate(10, 295)");
+    
+    playerDetailG.append("text")
+        .attr("x", 10)
+        .attr("y", 325)
+        .attr("font-size", 11)
+        .attr("fill", "#18414e")
+        .text("Weak Foot");
+    
+    playerDetailG.append("g")
+        .attr("id", "weakFootBarG")
+        .attr("transform", "translate(10, 330)");
 
     playerDetailG.append("g")
         .attr("id", "attackingStats")
@@ -1024,18 +1108,53 @@ function updatePlayerDetailView(player) {
                 .attr("transform", "translate(375, 150)");
             d3.select("#ovr-detail").remove();
         });
-    d3.select("#playerAge").text("Age: " + player.age);
-    d3.select("#playerHeight").text("Height: " + player.height_cm);
-    d3.select("#playerWeight").text("Weight: " + player.weight_kg);
-    d3.select("#playerValue").text("Value: " + player.value_eur);
-    d3.select("#playerWage").text("Wage: " + player.wage_eur);
+    d3.select("#playerAge").text(player.age);
+    d3.select("#playerHeight").text(playerHeightString(player.height_cm));
+    d3.select("#playerWeight").text(player.weight_kg + "kg");
+    d3.select("#playerValue").text(playerValueString(player.value_eur));
+    d3.select("#playerWage").text(playerValueString(player.wage_eur));
     d3.select("#playerImage").attr("xlink:href", player.player_face_url);
     d3.select("#clubFlag").attr("xlink:href", player.club_logo_url);
     d3.select("#nationalFlag").attr("xlink:href", player.nation_flag_url);
+    skillBarPlot(d3.select("#skillBarG"), player.skill_moves);
+    skillBarPlot(d3.select("#weakFootBarG"), player.weak_foot);
 
     for (let i = 0; i < 7; i++) {
         updatePlayerStatDetailBars(Object.values(Object.values(statDicts)[i]), player);
     }
+}
+
+function skillBarPlot(g, skills) {
+    // draw a skill bar plot showing the player's skill level (from 0 to 5) as 5 separate bars
+    for (let i = 0; i < 5; i++) {
+        g.append("rect")
+            .attr("x", i * 45)
+            .attr("y", 0)
+            .attr("width", 35)
+            .attr("height", 10)
+            .attr("fill", () => {
+                if (i < skills) {
+                    return "#82A0A9";
+                } else {
+                    return "#18414e";
+                }
+            });
+    }
+
+}
+
+function playerValueString(value) {
+    if (value < 1000) {
+        return value.toString();
+    } else if (value < 1000000) {
+        return (value / 1000).toFixed(1) + "K";
+    } else {
+        return (value / 1000000).toFixed(1) + "M";
+    }
+}
+
+function playerHeightString(value) {
+    return (value / 100).toFixed(2) + "m";
 }
 
 function initPlayerStatDetailBar(x, y, G, name, attr_name, value) {
@@ -1158,22 +1277,22 @@ function attributeHistoryPlot(player, attr, G, width, height) {
     let xScale = d3.scaleLinear()
         .domain([2015, 2022])
         .range([0, width]);
-    
+
     let yScale = d3.scaleLinear()
         .domain([history_min, history_max])
         .range([height - 5, 20]);
-    
+
     let line = d3.line()
         .x(d => xScale(d[0]))
         .y(d => yScale(d[1]));
-    
+
     G.append("path")
         .datum(history)
         .attr("d", line)
         .attr("fill", "none")
         .attr("stroke", "lightblue")
         .attr("stroke-width", 2);
-    
+
     G.append("circle")
         .attr("cx", xScale(currentYear))
         .attr("cy", yScale(player[attr]))
@@ -1190,7 +1309,7 @@ function attributeHistory(playerId, attribute) {
             found = false;
             if (data[j].sofifa_id == playerId) {
                 if (data[j][attribute] != null && data[j][attribute] != "") {
-                    attributeHistory.push([i,parseInt(data[j][attribute])]);
+                    attributeHistory.push([i, parseInt(data[j][attribute])]);
                 }
                 found = true;
                 break;
@@ -1270,42 +1389,42 @@ function kernelEpanechnikov(k) {
 
 
 
-function initSelectors(playerList){
+function initSelectors(playerList) {
     let ids = ["player1DropdownContent", "player2DropdownContent"]
     let allAttrs = []
     let attrRef = {}
-    for(idx in Object.keys(statDicts)){
+    for (idx in Object.keys(statDicts)) {
         let stats = statDicts[Object.keys(statDicts)[idx]]
         Object.keys(stats).forEach(stat => allAttrs.push(stat))
         Object.keys(stats).forEach(stat => attrRef[stat] = stats[stat])
     }
     d3.select(".dropdown-content a:hover")
         .style("background-color", tinycolor("#18414e").darken(10));
-    
+
     d3.select("#attrBtn")
         .attr("textContent", ctx.comparisonAttr);
 
-    for(let id in ids){
-        d3.select("#"+ids[id])
-        .selectAll("players")
-        .data(playerList)
-        .enter()
-        .append("a")
-        .on("click", (event, d) => {
-            console.log("Clicked on " + d.short_name);
-            ctx.comparisonPlayers[parseInt(id)+1] = d
-            updateYAxisScale();
-            showPlayerDropdown(ids[id]);
-            updatePlayerComparisonView(parseInt(id)+1, d);
-            updateComparison1(parseInt(id)+1, d);
-        })
-        .append("text")
-        .attr("x", 10)
-        .attr("y", 0)
-        .attr("font-size", 15)
-        .attr("font-weight", "bold")
-        .attr("font-family", "sans-serif")
-        .attr("fill", "#18414e")
+    for (let id in ids) {
+        d3.select("#" + ids[id])
+            .selectAll("players")
+            .data(playerList)
+            .enter()
+            .append("a")
+            .on("click", (event, d) => {
+                console.log("Clicked on " + d.short_name);
+                ctx.comparisonPlayers[parseInt(id) + 1] = d
+                updateYAxisScale();
+                showPlayerDropdown(ids[id]);
+                updatePlayerComparisonView(parseInt(id) + 1, d);
+                updateComparison1(parseInt(id) + 1, d);
+            })
+            .append("text")
+            .attr("x", 10)
+            .attr("y", 0)
+            .attr("font-size", 15)
+            .attr("font-weight", "bold")
+            .attr("font-family", "sans-serif")
+            .attr("fill", "#18414e")
             .text(d => d.short_name);
     }
     d3.select("#attrSelectionContent")
@@ -1332,7 +1451,7 @@ function initSelectors(playerList){
 }
 
 
-function updateYAxisScale(){
+function updateYAxisScale() {
     let attr = ctx.comparisonAttr;
     let min_values = []
     Object.keys(ctx.comparisonPlayers).forEach((key) => {
@@ -1347,7 +1466,7 @@ function updateYAxisScale(){
     min = Math.floor(min / 10) * 10
     console.log("min", min)
     ctx.yRatingScale = d3.scaleLinear()
-        .domain([min-10, 100])
+        .domain([min - 10, 100])
         .range([425, 25]);
 
     d3.select("#yAxisComp1")
@@ -1378,9 +1497,9 @@ function filterFunction(dropdownId, searchId) {
     }
 }
 
-function initPlayersComparisonView(){
+function initPlayersComparisonView() {
     let playersComparisonG = d3.select("#playersComparisonG");
-    
+
     playersComparisonG.attr("transform", "translate(0,1050)");
     playersComparisonG.append("rect")
         .attr("width", 1900)
@@ -1392,33 +1511,33 @@ function initPlayersComparisonView(){
         .attr("width", 300)
         .attr("height", 1000)
         .attr("fill", tinycolor("#6C8289").lighten(20));
-    
-    addPlayerFace("#playersComparisonG",0,85,300,180,1);
-    addPlayerFace("#playersComparisonG",0,585,300,180,2);
-    drawComparisonAxis(375,25);
+
+    addPlayerFace("#playersComparisonG", 0, 85, 300, 180, 1);
+    addPlayerFace("#playersComparisonG", 0, 585, 300, 180, 2);
+    drawComparisonAxis(375, 25);
     // drawComparisonAxis(1150,25);
     // drawComparisonAxis(375,275);
 }
 
-function addPlayerFace(rootId, x, y, w, h, playerNo){
-    y = y+50
+function addPlayerFace(rootId, x, y, w, h, playerNo) {
+    y = y + 50
     let root = d3.select(rootId);
 
     // the detail rect(with light color) is from y = y+h to y = y+h+100
-    if(playerNo == 1){
+    if (playerNo == 1) {
         root.append("rect")
             .attr("x", x)
             .attr("y", y)
             .attr("width", w)
-            .attr("height", h+100)
+            .attr("height", h + 100)
             .attr("fill", "#4DD0F7");
     }
-    else{
+    else {
         root.append("rect")
             .attr("x", x)
             .attr("y", y)
             .attr("width", w)
-            .attr("height", h+100)
+            .attr("height", h + 100)
             .attr("fill", "#F76590");
     }
 
@@ -1431,33 +1550,33 @@ function addPlayerFace(rootId, x, y, w, h, playerNo){
 
     root.append("image")
         .attr("id", `playerImage${playerNo}`)
-        .attr("x", x+30)
-        .attr("y", y+26)
-        .attr("width", 0.8*w)
-        .attr("height", 0.8*h)
+        .attr("x", x + 30)
+        .attr("y", y + 26)
+        .attr("width", 0.8 * w)
+        .attr("height", 0.8 * h)
         .attr("anchor", "middle")
         .attr("xlink:href", "https://cdn.sofifa.net/players/notfound_0_120.png");
-    
+
     root.append("image")
         .attr("id", `clubFlag${playerNo}`)
-        .attr("x", x+15)
-        .attr("y", y+10)
+        .attr("x", x + 15)
+        .attr("y", y + 10)
         .attr("width", 55)
         .attr("height", 55)
         .attr("xlink:href", "https://cdn.sofifa.net/teams/21/60.png");
-    
+
     root.append("image")
         .attr("id", `nationalFlag${playerNo}`)
-        .attr("x", x+(w-60))
-        .attr("y", y+10)
+        .attr("x", x + (w - 60))
+        .attr("y", y + 10)
         .attr("width", 45)
         .attr("height", 45)
         .attr("xlink:href", "https://cdn.sofifa.net/flags/de.png");
-    
+
     root.append("text")
         .attr("id", `playerName${playerNo}`)
         .attr("x", 10)
-        .attr("y", y+h+30)
+        .attr("y", y + h + 30)
         .attr("font-size", 25)
         .attr("font-weight", "bold")
         .attr("fill", "#18414e")
@@ -1466,7 +1585,7 @@ function addPlayerFace(rootId, x, y, w, h, playerNo){
     root.append("text")
         .attr("id", `playerPosition${playerNo}`)
         .attr("x", 10)
-        .attr("y", y+h+60)
+        .attr("y", y + h + 60)
         .attr("font-size", 20)
         .attr("font-weight", "bold")
         .attr("fill", "#18414e")
@@ -1474,24 +1593,24 @@ function addPlayerFace(rootId, x, y, w, h, playerNo){
         .text("POS");
 }
 
-function drawComparisonAxis(x,y){
-    let years = [2015,2016,2017,2018,2019,2020,2021,2022];
+function drawComparisonAxis(x, y) {
+    let years = [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022];
     let width = 700;
     let height = 400;
     let axis = d3.select("g#playersComparisonG").append("g").attr("id", "comparison1");
 
     ctx.yRatingScale = d3.scaleLinear()
         .domain([0, 100])
-        .range([y+height, y]);
+        .range([y + height, y]);
 
     ctx.xYearsScale = d3.scaleBand()
         .domain(years)
-        .range([x, x+width])
+        .range([x, x + width])
         .padding([0.8])
     // x axis
     axis.append("g")
         .attr("id", "xAxisComp1")
-        .attr("transform",`translate(0,${y+height})`)
+        .attr("transform", `translate(0,${y + height})`)
         .call(d3.axisBottom(ctx.xYearsScale));
     // y axis
     axis.append("g")
@@ -1507,13 +1626,13 @@ function drawComparisonAxis(x,y){
     //     .attr("y", x - 35)
     //     .attr("x", -(y+height)/2)
     //     .text("Text")
-        
-    d3.selectAll(".domain").style("stroke",tinycolor("#18414e").darken(40));
-    d3.selectAll(".tick").select("line").style("stroke",tinycolor("#18414e").darken(40));
+
+    d3.selectAll(".domain").style("stroke", tinycolor("#18414e").darken(40));
+    d3.selectAll(".tick").select("line").style("stroke", tinycolor("#18414e").darken(40));
     d3.selectAll(".tick").select("text").attr("fill", "#18414e").attr("font-size", 15);
 }
 
-function updatePlayerComparisonView(playerNo, player){
+function updatePlayerComparisonView(playerNo, player) {
     d3.select(`#playerImage${playerNo}`).attr("xlink:href", player.player_face_url);
     d3.select(`#clubFlag${playerNo}`).attr("xlink:href", player.club_logo_url);
     d3.select(`#nationalFlag${playerNo}`).attr("xlink:href", player.nation_flag_url);
@@ -1521,20 +1640,20 @@ function updatePlayerComparisonView(playerNo, player){
     d3.select(`#playerPosition${playerNo}`).text(player.club_position);
 }
 
-function updateComparison1(playerNo, player){
-    if(document.getElementById(`player${playerNo}LinePlot`) != null){
+function updateComparison1(playerNo, player) {
+    if (document.getElementById(`player${playerNo}LinePlot`) != null) {
         document.getElementById("comparison1").removeChild(
             document.getElementById(`player${playerNo}LinePlot`)
         );
     }
-    if(document.getElementById(`comparisonTitle`) != null){
+    if (document.getElementById(`comparisonTitle`) != null) {
         document.getElementById("comparison1").removeChild(
             document.getElementById("comparisonTitle")
         );
     }
     let linePlot = d3.select("#comparison1").append("g")
-                        .attr("id", `player${playerNo}LinePlot`)
-                        .attr("transform", "translate(5, 5)");
+        .attr("id", `player${playerNo}LinePlot`)
+        .attr("transform", "translate(5, 5)");
 
 
     d3.select("#comparison1")
@@ -1567,7 +1686,7 @@ function updateComparison1(playerNo, player){
         .x(d => ctx.xYearsScale(d[0]))
         .y(d => ctx.yRatingScale(d[1]));
 
-    if(playerNo == 1){
+    if (playerNo == 1) {
         linePlot.append("path")
             .datum(history)
             .attr("fill", "none")
@@ -1579,7 +1698,7 @@ function updateComparison1(playerNo, player){
             .duration(1000)
             .attr("d", line);
     }
-    else{
+    else {
         linePlot.append("path")
             .datum(history)
             .attr("fill", "none")
@@ -1591,18 +1710,18 @@ function updateComparison1(playerNo, player){
             .duration(1000)
             .attr("d", line);
     }
-    
+
     drawRadar("comparisonRadarG", "playersComparisonG", Object.values(ctx.comparisonPlayers), getComparisonStatsCfg(), "comparison");
 }
 
-function updateComparisonAttr(player1, player2){
+function updateComparisonAttr(player1, player2) {
     let player1Plot = d3.select(`#player1LinePlot`)
     let player2Plot = d3.select(`#player2LinePlot`)
     let historyPlayer1 = new Object();
     let historyPlayer2 = new Object();
 
     // let currentYear = ctx.comparisonPlayers[1].year;
-    if(ctx.comparisonPlayers[1] != null){
+    if (ctx.comparisonPlayers[1] != null) {
         historyPlayer1 = attributeHistory(ctx.comparisonPlayers[1].sofifa_id, ctx.comparisonAttr);
         historyPlayer1 = historyPlayer1.filter(function (d) {
             return d != null;
@@ -1620,7 +1739,7 @@ function updateComparisonAttr(player1, player2){
             .attr("stroke-width", 2);
 
     }
-    if(ctx.comparisonPlayers[2] != null){
+    if (ctx.comparisonPlayers[2] != null) {
         historyPlayer2 = attributeHistory(ctx.comparisonPlayers[2].sofifa_id, ctx.comparisonAttr);
         historyPlayer2 = historyPlayer2.filter(function (d) {
             return d != null;
@@ -1636,9 +1755,9 @@ function updateComparisonAttr(player1, player2){
             .attr("fill", "none")
             .attr("stroke", ctx.comparisonColors[1])
             .attr("stroke-width", 2);
-    
+
     }
-    document.getElementById(`comparisonTitle`).innerHTML = '';   
+    document.getElementById(`comparisonTitle`).innerHTML = '';
     d3.select("#comparisonTitle")
         .append("text")
         .attr("x", 1070)
