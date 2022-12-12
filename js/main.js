@@ -398,12 +398,18 @@ function initBestPlayerList(playerList) {
         .attr("y", 1)
         .attr("width", 38)
         .attr("height", 38);
-    bestPlayerButtons.on("click", (event, d) => {
+    overlay = bestPlayerButtons.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", 300)
+        .attr("height", 40)
+        .attr("fill-opacity", 0);
+    overlay.on("click", (event, d) => {
         console.log("Clicked on " + d.short_name);
         updatePlayerDetailView(d);
-        // playerStatsRadar();
         drawRadar("playerStatsG", "playerDetailG", [d], getPlayerStatsCfg(), "individual");
     });
+    overlay.style("cursor", "pointer");
 }
 
 function updateBestPlayerList(playerList) {
@@ -936,132 +942,90 @@ function initPlayerDetailView() {
         .attr("id", "weakFootBarG")
         .attr("transform", "translate(10, 330)");
 
-    playerDetailG.append("g")
-        .attr("id", "attackingStats")
-        .attr("transform", "translate(0, 420)");
+    ctx.attributeGroups = {}
 
-    let attackingStats = d3.select("#attackingStats");
-
-    attackingStats.append("text")
+    playerDetailG.append("text")
         .attr("x", 10)
-        .attr("y", 0)
+        .attr("y", 420)
         .attr("font-size", 15)
         .attr("font-weight", "bold")
         .attr("fill", "#18414e")
         .text("Attacking");
-
-    i = 0;
-    for (let [key, value] of Object.entries(statDicts.attacking_stats)) {
-        initPlayerStatDetailBar(10, i * 40 + 25, attackingStats, key, value, 0);
-        i++;
+    
+    for (let i = 0; i < 5; i++) {
+        initPlayerStatDetailBar(10, i * 40 + 445, playerDetailG, Object.keys(statDicts.attacking_stats)[i], Object.values(statDicts.attacking_stats)[i], 0);
     }
 
-    playerDetailG.append("g")
-        .attr("id", "skillStats")
-        .attr("transform", "translate(0, 660)");
-
-    let skillStats = d3.select("#skillStats");
-
-    skillStats.append("text")
+    playerDetailG.append("text")
         .attr("x", 10)
-        .attr("y", 0)
+        .attr("y", 660)
         .attr("font-size", 15)
         .attr("font-weight", "bold")
         .attr("fill", "#18414e")
         .text("Skills");
 
     for (let i = 0; i < 5; i++) {
-        initPlayerStatDetailBar(10, i * 40 + 25, skillStats, Object.keys(statDicts.skill_stats)[i], Object.values(statDicts.skill_stats)[i], 0);
+        initPlayerStatDetailBar(10, i * 40 + 685, playerDetailG, Object.keys(statDicts.skill_stats)[i], Object.values(statDicts.skill_stats)[i], 0);
     }
 
-    playerDetailG.append("g")
-        .attr("id", "movementStats")
-        .attr("transform", "translate(187.5, 420)");
-
-    let movementStats = d3.select("#movementStats");
-
-    movementStats.append("text")
-        .attr("x", 10)
-        .attr("y", 0)
+    playerDetailG.append("text")
+        .attr("x", 197.5)
+        .attr("y", 420)
         .attr("font-size", 15)
         .attr("font-weight", "bold")
         .attr("fill", "#18414e")
         .text("Movement");
-
+    
     for (let i = 0; i < 5; i++) {
-        initPlayerStatDetailBar(10, i * 40 + 25, movementStats, Object.keys(statDicts.movement_stats)[i], Object.values(statDicts.movement_stats)[i], 0);
+        initPlayerStatDetailBar(197.5, i * 40 + 445, playerDetailG, Object.keys(statDicts.movement_stats)[i], Object.values(statDicts.movement_stats)[i], 0);
     }
 
-    playerDetailG.append("g")
-        .attr("id", "powerStats")
-        .attr("transform", "translate(187.5, 660)");
-
-    let powerStats = d3.select("#powerStats");
-
-    powerStats.append("text")
-        .attr("x", 10)
-        .attr("y", 0)
+    playerDetailG.append("text")
+        .attr("x", 197.5)
+        .attr("y", 660)
         .attr("font-size", 15)
         .attr("font-weight", "bold")
         .attr("fill", "#18414e")
         .text("Power");
-
+    
     for (let i = 0; i < 5; i++) {
-        initPlayerStatDetailBar(10, i * 40 + 25, powerStats, Object.keys(statDicts.power_stats)[i], Object.values(statDicts.power_stats)[i], 0);
+        initPlayerStatDetailBar(197.5, i * 40 + 685, playerDetailG, Object.keys(statDicts.power_stats)[i], Object.values(statDicts.power_stats)[i], 0);
     }
 
-    playerDetailG.append("g")
-        .attr("id", "mentalityStats")
-        .attr("transform", "translate(375, 420)");
-
-    let mentalityStats = d3.select("#mentalityStats");
-
-    mentalityStats.append("text")
-        .attr("x", 10)
-        .attr("y", 0)
+    playerDetailG.append("text")
+        .attr("x", 385)
+        .attr("y", 420)
         .attr("font-size", 15)
         .attr("font-weight", "bold")
         .attr("fill", "#18414e")
         .text("Mentality");
 
     for (let i = 0; i < 6; i++) {
-        initPlayerStatDetailBar(10, i * 40 + 25, mentalityStats, Object.keys(statDicts.mentality_stats)[i], Object.values(statDicts.mentality_stats)[i], 0);
+        initPlayerStatDetailBar(385, i * 40 + 445, playerDetailG, Object.keys(statDicts.mentality_stats)[i], Object.values(statDicts.mentality_stats)[i], 0);
     }
 
-    playerDetailG.append("g")
-        .attr("id", "defendingStats")
-        .attr("transform", "translate(375, 700)");
-
-    let defendingStats = d3.select("#defendingStats");
-
-    defendingStats.append("text")
-        .attr("x", 10)
-        .attr("y", 0)
+    playerDetailG.append("text")
+        .attr("x", 385)
+        .attr("y", 700)
         .attr("font-size", 15)
         .attr("font-weight", "bold")
         .attr("fill", "#18414e")
         .text("Defending");
-
+    
     for (let i = 0; i < 3; i++) {
-        initPlayerStatDetailBar(10, i * 40 + 25, defendingStats, Object.keys(statDicts.defending_stats)[i], Object.values(statDicts.defending_stats)[i], 0);
+        initPlayerStatDetailBar(385, i * 40 + 725, playerDetailG, Object.keys(statDicts.defending_stats)[i], Object.values(statDicts.defending_stats)[i], 0);
     }
 
-    playerDetailG.append("g")
-        .attr("id", "goalkeepingStats")
-        .attr("transform", "translate(562.5, 420)");
-
-    let goalkeepingStats = d3.select("#goalkeepingStats");
-
-    goalkeepingStats.append("text")
-        .attr("x", 10)
-        .attr("y", 0)
+    playerDetailG.append("text")
+        .attr("x", 572.5)
+        .attr("y", 420)
         .attr("font-size", 15)
         .attr("font-weight", "bold")
         .attr("fill", "#18414e")
         .text("Goalkeeping");
-
+    
     for (let i = 0; i < 6; i++) {
-        initPlayerStatDetailBar(10, i * 40 + 25, goalkeepingStats, Object.keys(statDicts.goalkeeping_stats)[i], Object.values(statDicts.goalkeeping_stats)[i], 0);
+        initPlayerStatDetailBar(572.5, i * 40 + 445, playerDetailG, Object.keys(statDicts.goalkeeping_stats)[i], Object.values(statDicts.goalkeeping_stats)[i], 0);
     }
 }
 
@@ -1081,25 +1045,25 @@ function updatePlayerDetailView(player) {
                 .text(player.potential);
             detailG = d3.select("#playerDetailG").append("g")
                 .attr("id", "ovr-detail")
-                .attr("transform", "translate(" + 270 + "," + -55 + ")");
+                .attr("transform", "translate(" + 220 + "," + -75 + ")");
             detailG.append("rect")
                 .attr("x", 0)
                 .attr("y", 0)
-                .attr("width", 210)
-                .attr("height", 160)
+                .attr("width", 310)
+                .attr("height", 200)
                 .attr("fill", "lightblue");
             detailG.append("rect")
                 .attr("x", 5)
                 .attr("y", 5)
-                .attr("width", 200)
-                .attr("height", 150)
+                .attr("width", 300)
+                .attr("height", 190)
                 .attr("fill", "#18414e");
             attributeHistoryG = detailG.append("g")
                 .attr("transform", "translate(5, 5)");
             densityG = detailG.append("g")
-                .attr("transform", "translate(5, 80)");
-            densityPlot(ctx.currentDataSelection, "overall", densityG, 200, 75, player.overall);
-            attributeHistoryPlot(player, "overall", attributeHistoryG, 200, 75);
+                .attr("transform", "translate(5, 100)");
+            densityPlot(ctx.currentDataSelection, "overall", densityG, 300, 95, player.overall);
+            attributeHistoryPlot(player, "overall", attributeHistoryG, 300, 95);
         })
         .on("mouseout", function () {
             d3.select("#playerPotentialG")
@@ -1162,45 +1126,46 @@ function initPlayerStatDetailBar(x, y, G, name, attr_name, value) {
         .domain([0, 100])
         .range([0, 160]);
 
-    g = G.append("g")
+    /*g = G.append("g")
         .attr("id", "statDetailG_" + attr_name)
-        .attr("transform", "translate(" + x + "," + y + ")");
+        .attr("transform", "translate(" + x + "," + y + ")");*/
+    ctx.attributeGroups[attr_name] = [x, y]
 
-    g.append("text")
-        .attr("x", 0)
-        .attr("y", 0)
+    G.append("text")
+        .attr("x", x)
+        .attr("y", y)
         .attr("font-size", 15)
         .attr("fill", "#18414e")
         .text(name);
 
-    g.append("text")
+    G.append("text")
         .attr("id", "PlayerAttributeVal_" + attr_name)
-        .attr("x", 0 + 160)
-        .attr("y", 0)
+        .attr("x", x + 160)
+        .attr("y", y)
         .attr("font-size", 15)
         .attr("text-anchor", "end")
         .attr("fill", "#18414e")
         .text(value);
 
-    g.append("rect")
-        .attr("x", 0)
-        .attr("y", 0 + 5)
+    G.append("rect")
+        .attr("x", x)
+        .attr("y", y + 5)
         .attr("width", 160)
         .attr("height", 10)
         .attr("fill", "#18414e");
 
-    g.append("rect")
+    G.append("rect")
         .attr("id", "PlayerAttribute_" + attr_name)
-        .attr("x", - 1)
-        .attr("y", 4)
+        .attr("x", x-1)
+        .attr("y", y+4)
         .attr("width", statScale(value) + 1)
         .attr("height", 12)
         .attr("fill", "#6C8289");
 
-    g.append("rect")
+    G.append("rect")
         .attr("id", "PlayerAttribute_" + attr_name + "_overlay")
-        .attr("x", -1)
-        .attr("y", -15)
+        .attr("x", x-1)
+        .attr("y", y-15)
         .attr("width", 162)
         .attr("height", 30)
         .attr("fill-opacity", 0);
@@ -1226,27 +1191,28 @@ function updatePlayerStatDetailBars(attr_names, player) {
             .text(value);
         d3.select("#PlayerAttribute_" + attr_names[i] + "_overlay")
             .on("mouseenter", function () {
-                detailG = d3.select("#statDetailG_" + attr_names[i]).append("g")
+                xy = ctx.attributeGroups[attr_names[i]]
+                detailG = d3.select("#playerDetailG").append("g")
                     .attr("id", "detailG_" + attr_names[i] + "Text")
-                    .attr("transform", "translate(" + -25 + "," + (- 180) + ")");
+                    .attr("transform", "translate(" + (xy[0] - 75) + "," + (xy[1] - 220) + ")");
                 detailG.append("rect")
                     .attr("x", 0)
                     .attr("y", 0)
-                    .attr("width", 210)
-                    .attr("height", 160)
+                    .attr("width", 310)
+                    .attr("height", 200)
                     .attr("fill", "lightblue");
                 detailG.append("rect")
                     .attr("x", 5)
                     .attr("y", 5)
-                    .attr("width", 200)
-                    .attr("height", 150)
+                    .attr("width", 300)
+                    .attr("height", 190)
                     .attr("fill", "#18414e");
                 attributeHistoryG = detailG.append("g")
                     .attr("transform", "translate(5, 5)");
                 densityG = detailG.append("g")
-                    .attr("transform", "translate(5, 80)");
-                densityPlot(ctx.currentDataSelection, attr_names[i], densityG, 200, 75, player[attr_names[i]]);
-                attributeHistoryPlot(player, attr_names[i], attributeHistoryG, 200, 75);
+                    .attr("transform", "translate(5, 100)");
+                densityPlot(ctx.currentDataSelection, attr_names[i], densityG, 300, 95, player[attr_names[i]]);
+                attributeHistoryPlot(player, attr_names[i], attributeHistoryG, 300, 95);
             })
             .on("mouseout", function () {
                 d3.select("#detailG_" + attr_names[i] + "Text").remove();
@@ -1276,11 +1242,11 @@ function attributeHistoryPlot(player, attr, G, width, height) {
     // console.log(history, playerId, currentYear, history_min, history_max);
     let xScale = d3.scaleLinear()
         .domain([2015, 2022])
-        .range([0, width]);
+        .range([27, width - 12]);
 
     let yScale = d3.scaleLinear()
         .domain([history_min, history_max])
-        .range([height - 5, 20]);
+        .range([height - 25, 20]);
 
     let line = d3.line()
         .x(d => xScale(d[0]))
@@ -1298,6 +1264,44 @@ function attributeHistoryPlot(player, attr, G, width, height) {
         .attr("cy", yScale(player[attr]))
         .attr("r", 2)
         .attr("fill", "red");
+    
+    // append an axis showing ticks for each year
+    let xAxis = d3.axisBottom(xScale)
+        .tickValues([2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022])
+        .tickFormat(d3.format("d"));
+    
+    xAxisG = G.append("g")
+        .attr("transform", "translate(0," + (height - 20) + ")")
+        .call(xAxis);
+    
+    xAxisG.selectAll("text")
+        .attr("font-size", 8)
+        .attr("fill", "lightblue");
+
+    xAxisG.selectAll("line")
+        .attr("stroke", "lightblue");
+    
+    xAxisG.selectAll("path")
+        .attr("stroke", "lightblue");
+    
+    // append a y axis showing
+    let yAxis = d3.axisLeft(yScale)
+        .tickValues([history_min, history_max])
+        .tickFormat(d3.format("d"));
+    
+    yAxisG = G.append("g")
+        .attr("transform", "translate(22,0)")
+        .call(yAxis);
+    
+    yAxisG.selectAll("text")
+        .attr("font-size", 8)
+        .attr("fill", "lightblue");
+    
+    yAxisG.selectAll("line")
+        .attr("stroke", "lightblue");
+    
+    yAxisG.selectAll("path")
+        .attr("stroke", "lightblue");
 }
 
 function attributeHistory(playerId, attribute) {
@@ -1331,11 +1335,11 @@ function densityPlot(data, attribute, g, width, height, playerValue) {
         .text("Comparison to selected group");
     let xScale = d3.scaleLinear()
         .domain([0, 100])
-        .range([0, width]);
+        .range([10, width - 10]);
     density = attributeDensity(data, attribute, xScale);
     let yScale = d3.scaleLinear()
         .domain([0, d3.max(density, (d) => d[1])])
-        .range([height, 15]);
+        .range([height - 25, 20]);
     density = density.map(d => {
         if (d[0] == 0 || d[0] == 100) {
             return [d[0], 0];
@@ -1358,10 +1362,48 @@ function densityPlot(data, attribute, g, width, height, playerValue) {
 
     g.append("rect")
         .attr("x", xScale(playerValue))
-        .attr("y", 15)
-        .attr("width", 1)
-        .attr("height", height - 15)
+        .attr("y", 20)
+        .attr("width", 2)
+        .attr("height", height - 45)
         .attr("fill", "red");
+
+    // show all the multiples of 10 on the x axis
+    let xAxis = d3.axisBottom(xScale)
+        .tickValues([0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100])
+        .tickFormat(d3.format("d"));
+    
+    xAxisG = g.append("g")
+        .attr("transform", "translate(0," + (height - 20) + ")")
+        .call(xAxis);
+    
+    xAxisG.selectAll("text")
+        .attr("font-size", 8)
+        .attr("fill", "lightblue");
+    
+    xAxisG.selectAll("line")
+        .attr("stroke", "lightblue");
+    
+    xAxisG.selectAll("path")
+        .attr("stroke", "lightblue");
+    
+    // append a y axis showing the density
+    /*let yAxis = d3.axisLeft(yScale)
+        .tickValues([0, d3.max(density, (d) => d[1])])
+        .tickFormat(d3.format(".2f"));
+    
+    yAxisG = g.append("g")
+        .attr("transform", "translate(20,0)")
+        .call(yAxis);
+    
+    yAxisG.selectAll("text")
+        .attr("font-size", 8)
+        .attr("fill", "lightblue");
+    
+    yAxisG.selectAll("line")
+        .attr("stroke", "lightblue");
+
+    yAxisG.selectAll("path")
+        .attr("stroke", "lightblue");*/
 }
 
 function attributeDensity(data, attribute, scale) {
