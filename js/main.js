@@ -11,14 +11,14 @@ const ctx = {
     comparisonColors: ["#4DD0F7", "#F76590"],
     comparisonPlayers: {},
     radarAxisNames: ["Pace", "Shooting", "Passing", "Dribbling", "Defending", "Physic"],
+    selectedPositions: [],
 }
 
 function updateYear(input) {
     if (ctx.YEAR + input >= 2015 && ctx.YEAR + input <= 2022) {
-        ctx.YEAR = ctx.YEAR + input;
-        d3.select("#yearLabel").text(ctx.YEAR);
-        console.log("Number of players in " + ctx.YEAR + ": " + ctx.playersPerYear[ctx.YEAR].length);
-        updatePlotsOnSelection(ctx.YEAR, ctx.SELECTION);
+        d3.select("#yearLabel").text(ctx.YEAR + input);
+        console.log("Number of players in " + (ctx.YEAR + input) + ": " + ctx.playersPerYear[ctx.YEAR + input].length);
+        updatePlotsOnSelection(ctx.YEAR + input, ctx.SELECTION);
     } else {
         console.log("Year out of range");
     }
@@ -86,6 +86,15 @@ function loadPlayerPositions() {
     });
 }
 
+function parsePosition(club_position, positions) {
+    if (club_position == "SUB") {
+        let pos = positions.split(",");
+        let position = pos[0];
+        return position;
+    } else {
+        return club_position;
+    }
+}
 
 function loadData() {
     d3.csv("fifa_players_15_22.csv").then((data) => {
@@ -94,6 +103,8 @@ function loadData() {
         for (let i = 0; i < data.length; i++) {
             let row = data[i];
             let year = row["year"];
+            let position = parsePosition(row["club_position"], row["player_positions"]);
+            row["position"] = position;
             if (year in playersPerYear) {
                 playersPerYear[year].push(row);
             } else {
@@ -121,9 +132,30 @@ function initPlots(data) {
     drawRadar("statsG", "rootG", data, getGroupStatsCfg(), "group");
 }
 
+function equalArray(arr1, arr2){
+    if (arr1.length != arr2.length) {
+        return false;
+    }
+    for (let i = 0; i < arr1.length; i++) {
+        if (arr1[i] != arr2[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 function updatePlotsOnSelection(year, selection) {
     let playerPositions = findPlayerPositions(selection);
-    data = ctx.playersPerYear[year].filter(d => playerPositions.includes(d.club_position));
+    if (equalArray(ctx.selectedPositions, playerPositions) && ctx.YEAR == year) {
+        console.log("No change in player positions or year");
+        ctx.SELECTION = selection;
+        ctx.YEAR = year;
+        return;
+    }
+    ctx.SELECTION = selection;
+    ctx.YEAR = year;
+    ctx.selectedPositions = playerPositions;
+    data = ctx.playersPerYear[year].filter(d => playerPositions.includes(d.position));
     ctx.currentDataSelection = data;
     updateBestPlayerList(data);
     // groupStatsRadar(data);
@@ -134,14 +166,12 @@ function updatePlotsOnSelection(year, selection) {
 
 function findPlayerPositions(selection) {
     if (selection === null) {
-        console.log(Object.keys(ctx.playerPositions));
         return Object.keys(ctx.playerPositions);
     } else {
         let x_min = ctx.footballFieldInverseScaleX(selection[0][0]);
         let x_max = ctx.footballFieldInverseScaleX(selection[1][0]);
         let y_min = ctx.footballFieldInverseScaleY(selection[0][1]);
         let y_max = ctx.footballFieldInverseScaleY(selection[1][1]);
-        console.log("x_min: " + x_min + ", x_max: " + x_max + ", y_min: " + y_min + ", y_max: " + y_max);
         let selectedPositions = [];
         for (let position in ctx.playerPositions) {
             let pos = ctx.playerPositions[position];
@@ -150,7 +180,6 @@ function findPlayerPositions(selection) {
                 selectedPositions.push(position);
             }
         }
-        console.log(selectedPositions);
         return selectedPositions;
     }
 }
@@ -349,8 +378,7 @@ function setupBrush() {
                     }
                 }
             }
-            ctx.SELECTION = event.selection;
-            updatePlotsOnSelection(ctx.YEAR, ctx.SELECTION);
+            updatePlotsOnSelection(ctx.YEAR, event.selection);
         });
     d3.select("#footballfieldG").call(brush);
 }
@@ -403,7 +431,8 @@ function initBestPlayerList(playerList) {
         .attr("y", 0)
         .attr("width", 300)
         .attr("height", 40)
-        .attr("fill-opacity", 0);
+        .attr("fill-opacity", 0)
+        .attr("class", "overlay");
     overlay.on("click", (event, d) => {
         console.log("Clicked on " + d.short_name);
         updatePlayerDetailView(d);
@@ -428,20 +457,33 @@ function updateBestPlayerList(playerList) {
     bestPlayerButtons.select(".playerName").text(d => d.short_name);
     bestPlayerButtons.select(".playerOverall").text(d => d.overall);
     bestPlayerButtons.select("image").attr("xlink:href", d => d.player_face_url);
+    overlay = bestPlayerButtons.select(".overlay");
+    overlay.on("click", (event, d) => {
+        console.log("Clicked on " + d.short_name);
+        updatePlayerDetailView(d);
+        drawRadar("playerStatsG", "playerDetailG", [d], getPlayerStatsCfg(), "individual");
+    });
 }
 
 //---------------------------------------------------------------------------------------------------------
-//---------------------------------------------STATS RADAR-------------------------------------------------
 
 function summaryStats(playerList, task) {
     // compute median, 25th and 75th percentile, min and max for each relevant feature
-    let features = ["pace", "shooting", "passing", "dribbling", "defending", "physic"];
-    let features_nice_names = ["Pace", "Shooting", "Passing", "Dribbling", "Defending", "Physic"];
-    let gk_features = ["gk_diving", "gk_handling", "gk_kicking", "gk_reflexes", "gk_speed", "gk_positioning"];
+    let player_features = ["pace", "shooting", "passing", "dribbling", "defending", "physic"];
+    let player_features_nice_names = ["Pace", "Shooting", "Passing", "Dribbling", "Defending", "Physic"];
+    let gk_features = ["goalkeeping_diving", "goalkeeping_handling", "goalkeeping_kicking", "goalkeeping_reflexes", "goalkeeping_speed", "goalkeeping_positioning"];
     let gk_features_nice_names = ["Diving", "Handling", "Kicking", "Reflexes", "Speed", "Positioning"];
     let orderedStats = new Array();
     let stats = {};
-    // filter for top 100 players
+    
+    if (playerList.every(d => d.position == "GK")) {
+        console.log("All GKs")
+        features = gk_features;
+        features_nice_names = gk_features_nice_names;
+    } else {
+        features = player_features;
+        features_nice_names = player_features_nice_names;
+    }
 
     if (task != "group") {
         for (let player in playerList) {
@@ -457,6 +499,7 @@ function summaryStats(playerList, task) {
         })
     }
     else {
+        // take only top 100 players into account
         playerList = playerList.sort((a, b) => b.overall - a.overall).slice(0, 100);
         let statsList = ["max", "q3", "median", "q1", "min"];
         for (let stat of statsList) {
@@ -464,6 +507,7 @@ function summaryStats(playerList, task) {
         }
         for (let feature of features) {
             let values = playerList.map(d => parseFloat(d[feature]));
+            console.log(values);
             let nice_feature = features_nice_names[features.indexOf(feature)];
             values.sort((a, b) => a - b);
             stats["median"].push({ axis: nice_feature, value: d3.median(values) });
@@ -624,7 +668,18 @@ function drawRadar(id, rootId, playerList, cfg, task) {
     let radius = Math.min(cfg.w / 2, cfg.h / 2); 	//radius of the outermost circle
     let angleSlice = Math.PI * 2 / total;		//width in radians of each "slice"
 
-    //radius scale
+    let legendTitles = [];
+
+    for (let entry of allAxis[0].values) {
+        legendTitles.push(entry.axis);
+    }
+
+    // legend
+    d3.select(`#${id}`).selectAll(".legend")
+        .data(legendTitles)
+        .text(string => { return string.charAt(0).toUpperCase() + string.slice(1) });
+
+    // radius scale
     let radiusScale = d3.scaleLinear()
         .range([0, radius])
         .domain([0, 100]);
@@ -1053,7 +1108,7 @@ function updatePlayerDetailView(player) {
     d3.select("#playerName").text(player.short_name);
     d3.select("#playerTeam").text(player.club_name);
     d3.select("#playerNationality").text(player.nationality_name);
-    d3.select("#playerPosition").text(player.club_position);
+    d3.select("#playerPosition").text(player.position);
     d3.select("#playerOverall").text(player.overall);
     d3.select("#OVR_overlay")
         .on("mouseenter", function () {
@@ -1699,7 +1754,7 @@ function updatePlayerComparisonView(playerNo, player) {
     d3.select(`#clubFlag${playerNo}`).attr("xlink:href", player.club_logo_url);
     d3.select(`#nationalFlag${playerNo}`).attr("xlink:href", player.nation_flag_url);
     d3.select(`#playerName${playerNo}`).text(player.short_name);
-    d3.select(`#playerPosition${playerNo}`).text(player.club_position);
+    d3.select(`#playerPosition${playerNo}`).text(player.position);
 }
 
 function updateComparison1(playerNo, player) {
