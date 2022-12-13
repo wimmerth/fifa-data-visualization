@@ -576,6 +576,26 @@ function createRadar(id, rootId, playerList, cfg, task) {
             else { return tinycolor("#18414e"); }
         })
         .style("stroke-width", "2px");
+    
+    //append small ticks for each axes at the intervalls indicated by cfg.levels
+    for (let j = 1; j <= cfg.levels; j++) {
+        let levelFactor = j / cfg.levels;
+        console.log(levelFactor);
+        axisGrid.selectAll(".levels")
+            .data(axisNames)
+            .enter()
+            .append("circle")
+            .attr("cx", function (d, i) { return radiusScale(cfg.maxValue * levelFactor) * Math.cos(angleSlice * i - Math.PI / 2); })
+            .attr("cy", function (d, i) { return radiusScale(cfg.maxValue * levelFactor) * Math.sin(angleSlice * i - Math.PI / 2); })
+            .attr("r", cfg.strokeWidth)
+            .style("fill", function (d, i) {
+                if (task == "group") { return "white"; }
+                else { return "#18414e"; }
+            }
+            )
+            .attr("class", "gridCircle");
+    }
+    
 
     //append the labels of each axis
     axis.append("text")
