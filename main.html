@@ -16,8 +16,6 @@
 svg {
     display: block;
     font-family: sans-serif;
-    margin-left: auto;
-    margin-right: auto;
     font-size: 10px;
 }
 
@@ -87,7 +85,17 @@ rect.selection {
               <div id="attrSelectionContent" class="dropdown-content">
                 <!-- <input type="text" placeholder="Search.." id="attrSearch" onkeyup="filterFunction('attrSelectionContent', 'attrSearch')"> -->
               </div>
-          </div>
+            </div>
+            <div class="scatterAttrSelection1">
+              <button onclick="showPlayerDropdown('attrXSelectionContent')" class="scatterAttrdropbtn">x-Axis Attribute</button>
+              <div id="attrXSelectionContent" class="dropdown-content">
+              </div>
+            </div>
+            <div class="scatterAttrSelection2">
+              <button onclick="showPlayerDropdown('attrYSelectionContent')" class="scatterAttrdropbtn">y-Axis Attribute</button>
+              <div id="attrYSelectionContent" class="dropdown-content">
+              </div>
+            </div>
         </div>
     </body>
 

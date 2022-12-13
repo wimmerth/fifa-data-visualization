@@ -35,7 +35,7 @@ function createViz() {
     rootG.append("g").attr("id", "bestPlayerListG");
     rootG.append("g").attr("id", "playerDetailG");
     rootG.append("g").attr("id", "playersComparisonG");
-    // rootG.append("g").attr("id","statsG");
+    rootG.append("g").attr("id", "generalStatsG");
 
     let background = d3.select("#bkgG");
     background.append("rect")
@@ -46,6 +46,7 @@ function createViz() {
         .attr("fill", ctx.backgroundGrey);
     showLoadingScreen();
     loadPlayerPositions();
+    loadRelevantAttrs();
     initPlayersComparisonView(); //test
     initPlayerDetailView();
     loadData();
@@ -116,7 +117,8 @@ function loadData() {
         ctx.playersPerYear = playersPerYear;
         ctx.currentDataSelection = playersPerYear[ctx.YEAR];
         initPlots(ctx.playersPerYear[ctx.YEAR]);
-        initSelectors(ctx.playersPerYear[ctx.YEAR]); // test
+        initSelectors(ctx.playersPerYear[ctx.YEAR]);
+        initGeneralDataAnalysis();
         hideLoadingScreen();
     }).catch((error) => {
         console.log(error);
@@ -132,7 +134,7 @@ function initPlots(data) {
     drawRadar("statsG", "rootG", data, getGroupStatsCfg(), "group");
 }
 
-function equalArray(arr1, arr2){
+function equalArray(arr1, arr2) {
     if (arr1.length != arr2.length) {
         return false;
     }
@@ -475,7 +477,7 @@ function summaryStats(playerList, task) {
     let gk_features_nice_names = ["Diving", "Handling", "Kicking", "Reflexes", "Speed", "Positioning"];
     let orderedStats = new Array();
     let stats = {};
-    
+
     if (playerList.every(d => d.position == "GK")) {
         console.log("All GKs")
         features = gk_features;
@@ -507,7 +509,6 @@ function summaryStats(playerList, task) {
         }
         for (let feature of features) {
             let values = playerList.map(d => parseFloat(d[feature]));
-            console.log(values);
             let nice_feature = features_nice_names[features.indexOf(feature)];
             values.sort((a, b) => a - b);
             stats["median"].push({ axis: nice_feature, value: d3.median(values) });
@@ -620,11 +621,10 @@ function createRadar(id, rootId, playerList, cfg, task) {
             else { return tinycolor("#18414e"); }
         })
         .style("stroke-width", "2px");
-    
+
     //append small ticks for each axes at the intervalls indicated by cfg.levels
     for (let j = 1; j <= cfg.levels; j++) {
         let levelFactor = j / cfg.levels;
-        console.log(levelFactor);
         axisGrid.selectAll(".levels")
             .data(axisNames)
             .enter()
@@ -639,7 +639,7 @@ function createRadar(id, rootId, playerList, cfg, task) {
             )
             .attr("class", "gridCircle");
     }
-    
+
 
     //append the labels of each axis
     axis.append("text")
@@ -1001,18 +1001,18 @@ function initPlayerDetailView() {
         .attr("font-size", 11)
         .attr("fill", "#18414e")
         .text("Skill Moves");
-    
+
     playerDetailG.append("g")
         .attr("id", "skillBarG")
         .attr("transform", "translate(10, 295)");
-    
+
     playerDetailG.append("text")
         .attr("x", 10)
         .attr("y", 325)
         .attr("font-size", 11)
         .attr("fill", "#18414e")
         .text("Weak Foot");
-    
+
     playerDetailG.append("g")
         .attr("id", "weakFootBarG")
         .attr("transform", "translate(10, 330)");
@@ -1026,7 +1026,7 @@ function initPlayerDetailView() {
         .attr("font-weight", "bold")
         .attr("fill", "#18414e")
         .text("Attacking");
-    
+
     for (let i = 0; i < 5; i++) {
         initPlayerStatDetailBar(10, i * 40 + 445, playerDetailG, Object.keys(statDicts.attacking_stats)[i], Object.values(statDicts.attacking_stats)[i], 0);
     }
@@ -1050,7 +1050,7 @@ function initPlayerDetailView() {
         .attr("font-weight", "bold")
         .attr("fill", "#18414e")
         .text("Movement");
-    
+
     for (let i = 0; i < 5; i++) {
         initPlayerStatDetailBar(197.5, i * 40 + 445, playerDetailG, Object.keys(statDicts.movement_stats)[i], Object.values(statDicts.movement_stats)[i], 0);
     }
@@ -1062,7 +1062,7 @@ function initPlayerDetailView() {
         .attr("font-weight", "bold")
         .attr("fill", "#18414e")
         .text("Power");
-    
+
     for (let i = 0; i < 5; i++) {
         initPlayerStatDetailBar(197.5, i * 40 + 685, playerDetailG, Object.keys(statDicts.power_stats)[i], Object.values(statDicts.power_stats)[i], 0);
     }
@@ -1086,7 +1086,7 @@ function initPlayerDetailView() {
         .attr("font-weight", "bold")
         .attr("fill", "#18414e")
         .text("Defending");
-    
+
     for (let i = 0; i < 3; i++) {
         initPlayerStatDetailBar(385, i * 40 + 725, playerDetailG, Object.keys(statDicts.defending_stats)[i], Object.values(statDicts.defending_stats)[i], 0);
     }
@@ -1098,7 +1098,7 @@ function initPlayerDetailView() {
         .attr("font-weight", "bold")
         .attr("fill", "#18414e")
         .text("Goalkeeping");
-    
+
     for (let i = 0; i < 6; i++) {
         initPlayerStatDetailBar(572.5, i * 40 + 445, playerDetailG, Object.keys(statDicts.goalkeeping_stats)[i], Object.values(statDicts.goalkeeping_stats)[i], 0);
     }
@@ -1231,16 +1231,16 @@ function initPlayerStatDetailBar(x, y, G, name, attr_name, value) {
 
     G.append("rect")
         .attr("id", "PlayerAttribute_" + attr_name)
-        .attr("x", x-1)
-        .attr("y", y+4)
+        .attr("x", x - 1)
+        .attr("y", y + 4)
         .attr("width", statScale(value) + 1)
         .attr("height", 12)
         .attr("fill", "#6C8289");
 
     G.append("rect")
         .attr("id", "PlayerAttribute_" + attr_name + "_overlay")
-        .attr("x", x-1)
-        .attr("y", y-15)
+        .attr("x", x - 1)
+        .attr("y", y - 15)
         .attr("width", 162)
         .attr("height", 30)
         .attr("fill-opacity", 0);
@@ -1339,42 +1339,42 @@ function attributeHistoryPlot(player, attr, G, width, height) {
         .attr("cy", yScale(player[attr]))
         .attr("r", 2)
         .attr("fill", "red");
-    
+
     // append an axis showing ticks for each year
     let xAxis = d3.axisBottom(xScale)
         .tickValues([2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022])
         .tickFormat(d3.format("d"));
-    
+
     xAxisG = G.append("g")
         .attr("transform", "translate(0," + (height - 20) + ")")
         .call(xAxis);
-    
+
     xAxisG.selectAll("text")
         .attr("font-size", 8)
         .attr("fill", "lightblue");
 
     xAxisG.selectAll("line")
         .attr("stroke", "lightblue");
-    
+
     xAxisG.selectAll("path")
         .attr("stroke", "lightblue");
-    
+
     // append a y axis showing
     let yAxis = d3.axisLeft(yScale)
         .tickValues([history_min, history_max])
         .tickFormat(d3.format("d"));
-    
+
     yAxisG = G.append("g")
         .attr("transform", "translate(22,0)")
         .call(yAxis);
-    
+
     yAxisG.selectAll("text")
         .attr("font-size", 8)
         .attr("fill", "lightblue");
-    
+
     yAxisG.selectAll("line")
         .attr("stroke", "lightblue");
-    
+
     yAxisG.selectAll("path")
         .attr("stroke", "lightblue");
 }
@@ -1446,39 +1446,20 @@ function densityPlot(data, attribute, g, width, height, playerValue) {
     let xAxis = d3.axisBottom(xScale)
         .tickValues([0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100])
         .tickFormat(d3.format("d"));
-    
+
     xAxisG = g.append("g")
         .attr("transform", "translate(0," + (height - 20) + ")")
         .call(xAxis);
-    
+
     xAxisG.selectAll("text")
         .attr("font-size", 8)
         .attr("fill", "lightblue");
-    
+
     xAxisG.selectAll("line")
         .attr("stroke", "lightblue");
-    
+
     xAxisG.selectAll("path")
         .attr("stroke", "lightblue");
-    
-    // append a y axis showing the density
-    /*let yAxis = d3.axisLeft(yScale)
-        .tickValues([0, d3.max(density, (d) => d[1])])
-        .tickFormat(d3.format(".2f"));
-    
-    yAxisG = g.append("g")
-        .attr("transform", "translate(20,0)")
-        .call(yAxis);
-    
-    yAxisG.selectAll("text")
-        .attr("font-size", 8)
-        .attr("fill", "lightblue");
-    
-    yAxisG.selectAll("line")
-        .attr("stroke", "lightblue");
-
-    yAxisG.selectAll("path")
-        .attr("stroke", "lightblue");*/
 }
 
 function attributeDensity(data, attribute, scale) {
@@ -1508,12 +1489,19 @@ function kernelEpanechnikov(k) {
 
 function initSelectors(playerList) {
     let ids = ["player1DropdownContent", "player2DropdownContent"]
-    let allAttrs = []
+    /*let allAttrs = []
     let attrRef = {}
     for (idx in Object.keys(statDicts)) {
         let stats = statDicts[Object.keys(statDicts)[idx]]
         Object.keys(stats).forEach(stat => allAttrs.push(stat))
         Object.keys(stats).forEach(stat => attrRef[stat] = stats[stat])
+    }*/
+    let attrRefBasis = generalStatsCTX.relevantAttrs;
+    let attrRef = {};
+    for (let [key, value] of Object.entries(attrRefBasis)) {
+        if (!(["Value", "Wage", "Age", "Date of birth", "Height", "Weight", "Weak Foot", "Skill Moves"].includes(key))) {
+            attrRef[key] = value;
+        }
     }
     d3.select(".dropdown-content a:hover")
         .style("background-color", tinycolor("#18414e").darken(10));
@@ -1546,7 +1534,7 @@ function initSelectors(playerList) {
     }
     d3.select("#attrSelectionContent")
         .selectAll("attributes")
-        .data(allAttrs)
+        .data(Object.keys(attrRef))
         .enter()
         .append("a")
         .on("click", (event, d) => {
@@ -1572,19 +1560,20 @@ function updateYAxisScale() {
     let attr = ctx.comparisonAttr;
     let min_values = []
     Object.keys(ctx.comparisonPlayers).forEach((key) => {
-        console.log(ctx.comparisonPlayers[key][attr]);
         let history = attributeHistory(ctx.comparisonPlayers[key].sofifa_id, attr);
+        console.log(history);
         let history_min = d3.min(history, d => {
-            return d[1];
+            if (d != null){
+                return d[1];
+            }
         });
         min_values.push(history_min);
     })
     let min = d3.min(min_values, d => d);
     min = Math.floor(min / 10) * 10
-    console.log("min", min)
     ctx.yRatingScale = d3.scaleLinear()
         .domain([min - 10, 100])
-        .range([425, 25]);
+        .range([475, 75]);
 
     d3.select("#yAxisComp1")
         .transition()
@@ -1620,7 +1609,7 @@ function initPlayersComparisonView() {
     playersComparisonG.attr("transform", "translate(0,1050)");
     playersComparisonG.append("rect")
         .attr("width", 1900)
-        .attr("height", 1000)
+        .attr("height", 600)
         .attr("fill", "#6C8289");
 
     playersComparisonG.append("rect")
@@ -1629,11 +1618,9 @@ function initPlayersComparisonView() {
         .attr("height", 1000)
         .attr("fill", tinycolor("#6C8289").lighten(20));
 
-    addPlayerFace("#playersComparisonG", 0, 85, 300, 180, 1);
-    addPlayerFace("#playersComparisonG", 0, 585, 300, 180, 2);
-    drawComparisonAxis(375, 25);
-    // drawComparisonAxis(1150,25);
-    // drawComparisonAxis(375,275);
+    addPlayerFace("#playersComparisonG", 0, 0, 300, 150, 1);
+    addPlayerFace("#playersComparisonG", 0, 300, 300, 150, 2);
+    drawComparisonAxis(375, 75);
 }
 
 function addPlayerFace(rootId, x, y, w, h, playerNo) {
@@ -1697,7 +1684,7 @@ function addPlayerFace(rootId, x, y, w, h, playerNo) {
         .attr("font-size", 25)
         .attr("font-weight", "bold")
         .attr("fill", "#18414e")
-        .text("Player1 Name");
+        .text("Player Name");
 
     root.append("text")
         .attr("id", `playerPosition${playerNo}`)
@@ -1732,17 +1719,8 @@ function drawComparisonAxis(x, y) {
     // y axis
     axis.append("g")
         .attr("id", "yAxisComp1")
-        .attr("transform", `translate(${x},${y})`)
+        .attr("transform", `translate(${x},${0})`)
         .call(d3.axisLeft(ctx.yRatingScale));
-    // Y axis label:
-    // axis.append("text")
-    //     .attr("text-anchor", "end")
-    //     .attr("font-size", 20)
-    //     .attr("fill", "#18414e")
-    //     .attr("transform", "rotate(-90)")
-    //     .attr("y", x - 35)
-    //     .attr("x", -(y+height)/2)
-    //     .text("Text")
 
     d3.selectAll(".domain").style("stroke", tinycolor("#18414e").darken(40));
     d3.selectAll(".tick").select("line").style("stroke", tinycolor("#18414e").darken(40));
@@ -1828,6 +1806,20 @@ function updateComparison1(playerNo, player) {
             .attr("d", line);
     }
 
+    let otherLinePlot = d3.select(`#player${3 - playerNo}LinePlot`);
+    if (otherLinePlot != null) {
+        let otherPlayer = ctx[`curPlayer${3 - playerNo}y`];
+        let otherPlayerLine = d3.line()
+            .curve(d3.curveLinear)
+            .x(d => ctx.xYearsScale(d[0]))
+            .y((d,i) => ctx.yRatingScale(d[1]));
+        otherLinePlot.select("path")
+            .transition()
+            .ease(d3.easeCubic)
+            .duration(1000)
+            .attr("d", otherPlayerLine);
+    }
+
     drawRadar("comparisonRadarG", "playersComparisonG", Object.values(ctx.comparisonPlayers), getComparisonStatsCfg(), "comparison");
 }
 
@@ -1837,7 +1829,6 @@ function updateComparisonAttr(player1, player2) {
     let historyPlayer1 = new Object();
     let historyPlayer2 = new Object();
 
-    // let currentYear = ctx.comparisonPlayers[1].year;
     if (ctx.comparisonPlayers[1] != null) {
         historyPlayer1 = attributeHistory(ctx.comparisonPlayers[1].sofifa_id, ctx.comparisonAttr);
         historyPlayer1 = historyPlayer1.filter(function (d) {
@@ -1847,14 +1838,12 @@ function updateComparisonAttr(player1, player2) {
             .curve(d3.curveLinear)
             .x(d => ctx.xYearsScale(d[0]))
             .y(d => ctx.yRatingScale(d[1]));
-        document.getElementById(`player1LinePlot`).innerHTML = '';
-        player1Plot.append("path")
+        player1Plot.select("path")
             .datum(historyPlayer1)
-            .attr("d", linePlayer1)
-            .attr("fill", "none")
-            .attr("stroke", ctx.comparisonColors[0])
-            .attr("stroke-width", 2);
-
+            .transition()
+            .ease(d3.easeCubic)
+            .duration(1000)
+            .attr("d", linePlayer1);
     }
     if (ctx.comparisonPlayers[2] != null) {
         historyPlayer2 = attributeHistory(ctx.comparisonPlayers[2].sofifa_id, ctx.comparisonAttr);
@@ -1865,14 +1854,12 @@ function updateComparisonAttr(player1, player2) {
             .curve(d3.curveLinear)
             .x(d => ctx.xYearsScale(d[0]))
             .y(d => ctx.yRatingScale(d[1]));
-        document.getElementById(`player2LinePlot`).innerHTML = '';
-        player2Plot.append("path")
+        player2Plot.select("path")
             .datum(historyPlayer2)
-            .attr("d", linePlayer2)
-            .attr("fill", "none")
-            .attr("stroke", ctx.comparisonColors[1])
-            .attr("stroke-width", 2);
-
+            .transition()
+            .ease(d3.easeCubic)
+            .duration(1000)
+            .attr("d", linePlayer2);
     }
     document.getElementById(`comparisonTitle`).innerHTML = '';
     d3.select("#comparisonTitle")
@@ -1890,8 +1877,8 @@ function updateComparisonAttr(player1, player2) {
 
 function getComparisonStatsCfg(data) {
     let cfg = {
-        x: 725,
-        y: 745,
+        x: 1500,
+        y: 300,
         w: 350,				//width of the circle
         h: 350,				//height of the circle
         levels: 3,				//levels of inner circles
@@ -1907,4 +1894,98 @@ function getComparisonStatsCfg(data) {
         roundStrokes: true
     };
     return cfg;
+}
+
+//---------------------------------------------------------------------------------------------------------
+
+const generalStatsCTX = {
+
+}
+
+function initGeneralDataAnalysis() {
+    generalStatsG = d3.select("#generalStatsG")
+        .attr("transform", "translate(0, 2050)");
+    generalStatsG.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", ctx.width)
+        .attr("height", 1000)
+        .attr("fill", "#FFFFF2");
+    scatterPlotG = generalStatsG.append("g")
+        .attr("id", "scatterPlotG")
+        .attr("transform", "translate(0, 0)");
+    globeG = generalStatsG.append("g")
+        .attr("id", "globeG")
+        .attr("transform", `translate(${ctx.width / 2}, 0)`);
+    initVariableScatterPlot(scatterPlotG);
+    initGlobePlot(globeG); 
+}
+
+function loadRelevantAttrs() {
+    dict = {};
+    d3.csv("compAttributes.csv").then(function (data) {
+        data.forEach(function (d) {
+            dict[d.name] = d.attribute;  
+        });
+    });
+    generalStatsCTX.relevantAttrs = dict;
+    console.log("Loaded relevant attributes");
+}
+
+function initVariableScatterPlot(g) {
+    d3.select("#attrXSelectionContent")
+        .selectAll("attributes")
+        .data(Object.keys(generalStatsCTX.relevantAttrs))
+        .enter()
+        .append("a")
+        .on("click", (event, d) => {
+            console.log("Clicked on " + generalStatsCTX.relevantAttrs[d]);
+            /*generalStatsCTX.comparisonAttr = attrRef[d]
+            generalStatsCTX.comparisonAttrRef = d
+            updateScatterXAxisScale();
+            showPlayerDropdown("attrXSelectionContent");
+            updateComparisonAttr(generalStatsCTX.comparisonPlayers[1], generalStatsCTX.comparisonPlayers[2]);*/
+        })
+        .append("text")
+        .attr("x", 10)
+        .attr("y", 0)
+        .attr("font-size", 15)
+        .attr("font-weight", "bold")
+        .attr("font-family", "sans-serif")
+        .attr("fill", "white")
+        .text(d => d);
+
+    d3.select("#attrYSelectionContent")
+        .selectAll("attributes")
+        .data(Object.keys(generalStatsCTX.relevantAttrs))
+        .enter()
+        .append("a")
+        .on("click", (event, d) => {
+            console.log("Clicked on " + generalStatsCTX.relevantAttrs[d]);
+            /*generalStatsCTX.comparisonAttr = attrRef[d]
+            generalStatsCTX.comparisonAttrRef = d
+            updateScatterYAxisScale();
+            showPlayerDropdown("attrYSelectionContent");
+            updateComparisonAttr(generalStatsCTX.comparisonPlayers[1], generalStatsCTX.comparisonPlayers[2]);*/
+        })
+        .append("text")
+        .attr("x", 10)
+        .attr("y", 0)
+        .attr("font-size", 15)
+        .attr("font-weight", "bold")
+        .attr("font-family", "sans-serif")
+        .attr("fill", "#18414e")
+        .text(d => d);
+}
+
+function updateVariableScatterPlot(var1, var2) {
+
+}
+
+function initGlobePlot(g) {
+
+}
+
+function updateGlobePlot() {
+
 }

@@ -6,7 +6,7 @@
     font-size: 16px;
     border: none;
     display: inline-block;
-    width: 302px;
+    width: 300px;
     height: 50px;
     cursor: pointer;
     background-image: url('./img/icons8-down-arrow-32.png');
@@ -17,6 +17,22 @@
 
   .attrdropbtn {
     background-color: #338033;
+    color: white;
+    padding: 8px;
+    font-size: 16px;
+    border: none;
+    display: inline-block;
+    width: 302px;
+    height: 40px;
+    cursor: pointer;
+    background-image: url('./img/icons8-down-arrow-32.png');
+    background-position: 265px 10px;
+    background-size: 20px 20px;
+    background-repeat: no-repeat;
+  }
+
+  .scatterAttrdropbtn {
+    background-color: #18414e;
     color: white;
     padding: 8px;
     font-size: 16px;
@@ -70,23 +86,32 @@
   /* The container <div> - needed to position the dropdown content */
   .player1Dropdown {
     position: absolute;
-    transform: translate(-50%, -50);
-    top: 1143px;
-    left:10px;
+    top: 1058px;
+    left:8px;
     display: inline-block;
   }
   .player2Dropdown {
     position: absolute;
-    transform: translate(-50%, -50);
-    top: 1643px;
-    left: 10px;
+    top: 1358px;
+    left: 8px;
     display: inline-block;
   }
   .attrSelection {
     position: absolute;
-    transform: translate(-50%, -50);
     top: 1058px;
     left: 388px;
+    display: inline-block;
+  }
+  .scatterAttrSelection1 {
+    position: absolute;
+    top: 2050px;
+    left: 400px;
+    display: inline-block;
+  }
+  .scatterAttrSelection2{
+    position: absolute;
+    top: 2050px;
+    left: 800px;
     display: inline-block;
   }
   

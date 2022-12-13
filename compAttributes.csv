@@ -1,0 +1,52 @@
+name,attribute
+Overall,overall
+Potential,potential
+Value,value_eur
+Wage,wage_eur
+Age,age
+Date of birth,dob
+Height,height_cm
+Weight,weight_kg
+Weak Foot,weak_foot
+Skill Moves,skill_moves
+Pace,pace
+Shooting,shooting
+Passing,passing
+Dribbling,dribbling
+Defending,defending
+Physic,physic
+Crossing,attacking_crossing
+Finishing,attacking_finishing
+Heading Accuracy,attacking_heading_accuracy
+Short Passing,attacking_short_passing
+Volleys,attacking_volleys
+Dribbling,skill_dribbling
+Curve,skill_curve
+Freekick Accuracy,skill_fk_accuracy
+Long Passing,skill_long_passing
+Ball Control,skill_ball_control
+Acceleration,movement_acceleration
+Sprint Speed,movement_sprint_speed
+Agility,movement_agility
+Reactions,movement_reactions
+Balance,movement_balance
+Shot Power,power_shot_power
+Jumping,power_jumping
+Stamina,power_stamina
+Strength,power_strength
+Long Shots,power_long_shots
+Aggression,mentality_aggression
+Interceptions,mentality_interceptions
+Positioning,mentality_positioning
+Vision,mentality_vision
+Penalties,mentality_penalties
+Composure,mentality_composure
+Marking Awareness,defending_marking_awareness
+Standing Tackle,defending_standing_tackle
+Sliding Tackle,defending_sliding_tackle
+Diving,goalkeeping_diving
+Handling,goalkeeping_handling
+Kicking,goalkeeping_kicking
+Positioning,goalkeeping_positioning
+Reflexes,goalkeeping_reflexes
+Speed,goalkeeping_speed
