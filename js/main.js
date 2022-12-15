@@ -2170,7 +2170,7 @@ function initVariableScatterPlot(g) {
         .append("circle")
         .attr("cx", d => xYearsScale(parseFloat(d[generalStatsCTX.attrX]) + randomNoise(x_max - x_min)))
         .attr("cy", d => yRatingScale(parseFloat(d[generalStatsCTX.attrY]) + randomNoise(y_max - y_min)))
-        .attr("r", 4)
+        .attr("r", 3)
         .attr("fill", d => hueScale(d[generalStatsCTX.attrHue]));
     
     scatteredPoints.append("title")
