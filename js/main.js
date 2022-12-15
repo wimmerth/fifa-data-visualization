@@ -401,6 +401,36 @@ function initFootballField() {
             .attr("fill-opacity", 0);
     }
 
+    footballfieldG.append("text")
+        .attr("x", -ctx.footballFieldScaleY(90 / 2))
+        .attr("y", -15)
+        .attr("transform", "rotate(-90)")
+        .attr("text-anchor", "middle")
+        .attr("font-size", "20px")
+        .attr("font-weight", "bold")
+        .attr("fill", "white")
+        .text("Midfielders");
+    
+    footballfieldG.append("text")
+        .attr("x", -ctx.footballFieldScaleY(15))
+        .attr("y", -15)
+        .attr("transform", "rotate(-90)")
+        .attr("text-anchor", "middle")
+        .attr("font-size", "20px")
+        .attr("font-weight", "bold")
+        .attr("fill", "white")
+        .text("Forwards");
+    
+    footballfieldG.append("text")
+        .attr("x", -ctx.footballFieldScaleY(75))
+        .attr("y", -15)
+        .attr("transform", "rotate(-90)")
+        .attr("text-anchor", "middle")
+        .attr("font-size", "20px")
+        .attr("font-weight", "bold")
+        .attr("fill", "white")
+        .text("Defenders");
+
     setupBrush();
 }
 
