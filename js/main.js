@@ -167,6 +167,7 @@ function loadData() {
         initGeneralDataAnalysis();
         
         updatePlayerDetailView(ctx.playersPerYear[ctx.YEAR][0]);
+        drawRadar("playerStatsG", "playerDetailG", [ctx.playersPerYear[ctx.YEAR][0]], getPlayerStatsCfg(), "individual");
         
         hideLoadingScreen();
     }).catch((error) => {
