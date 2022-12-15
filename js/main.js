@@ -2153,7 +2153,8 @@ function initVariableScatterPlot(g) {
     let yAxis = d3.axisLeft(yRatingScale);
 
     let hueScale = d3.scaleOrdinal(d3.schemeCategory10)
-        .domain(generalStatsCTX.relevantPlayers.map(d => d[generalStatsCTX.attrHue]));
+        .domain(generalStatsCTX.relevantPlayers.map(d => d[generalStatsCTX.attrHue]))
+        .range(['#4DD0F7','#27E8AB', '#E04371', '#867C9C', '#7C9C81', '#E8E8E8']);
     
     if (generalStatsCTX.attrHue == "position") {
         hueScale = d3.scaleOrdinal()
@@ -2379,8 +2380,9 @@ function updateVariableScatterPlot(attribute) {
             .text(getKeyByValue(generalStatsCTX.relevantAttrs, generalStatsCTX.attrY));
     } else if (attribute == "hue") {
         let hueScale = d3.scaleOrdinal()
-            .domain(generalStatsCTX.relevantPlayers.map(d => d[generalStatsCTX.attrHue]))
-            .range(d3.schemeCategory10);
+            // .domain(generalStatsCTX.relevantPlayers.map(d => d[generalStatsCTX.attrHue]))
+            .range(['#4DD0F7','#27E8AB', '#E04371', '#867C9C', '#7C9C81', '#E8E8E8']);
+            // .range(d3.schemeCategory10);
         
         if (generalStatsCTX.attrHue == "position") {
             // hueScale = d3.scaleOrdinal(d3.schemeCategory10)
