@@ -1,7 +1,7 @@
 const ctx = {
     YEAR: 2022,
     width: 1900,
-    height: 3000,
+    height: 2250,
     footballFieldLineWidth: 0.2,
     backgroundGrey: "#2b2b2b",
     grassGreen: "#338033",
@@ -14,14 +14,58 @@ const ctx = {
     selectedPositions: [],
 }
 
-function updateYear(input) {
-    if (ctx.YEAR + input >= 2015 && ctx.YEAR + input <= 2022) {
-        d3.select("#yearLabel").text(ctx.YEAR + input);
-        console.log("Number of players in " + (ctx.YEAR + input) + ": " + ctx.playersPerYear[ctx.YEAR + input].length);
-        updatePlotsOnSelection(ctx.YEAR + input, ctx.SELECTION);
-    } else {
-        console.log("Year out of range");
-    }
+function setupYearSelection(yearSelection){
+    // Year selection with "scrollable" buttons to select the year
+    let yearList = [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022];
+    years = yearSelection.selectAll("g")
+        .data(yearList)
+        .enter()
+        .append("g")
+        .attr("class", "yearButton")
+        .attr("id", (d) => "yearButton" + d)
+        .attr("transform", (d, i) => "translate(" + (i * 100) + ",10)");
+    years.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", 100)
+        .attr("height", 50)
+        .attr("fill", "#6C8289");
+    years.append("text")
+        .attr("x", 50)
+        .attr("y", 30)
+        .attr("font-size", 20)
+        .attr("font-weight", "bold")
+        .attr("text-anchor", "middle")
+        .attr("fill", "white")
+        .text((d) => d);
+    years.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", 100)
+        .attr("height", 30)
+        .attr("fill", "transparent")
+        .on("click", (event, d) => {
+            console.log("Year selected: " + d);
+            moveYearSelectionIndicator(d);
+            updatePlotsOnSelection(d, ctx.SELECTION);
+        })
+        .style("cursor", "pointer");
+    yearSelection.append("rect")
+        .attr("id","yearSelectionIndicator")
+        .attr("x", 700)
+        .attr("y", 10)
+        .attr("width", 100)
+        .attr("height", 50)
+        .attr("fill", "none")
+        .attr("stroke", "white")
+        .attr("stroke-width", 2);
+}
+
+function moveYearSelectionIndicator(year) {
+    d3.select("#yearSelectionIndicator")
+        .transition()
+        .duration(1000)
+        .attr("x", (year - 2015) * 100);
 }
 
 function createViz() {
@@ -36,18 +80,19 @@ function createViz() {
     rootG.append("g").attr("id", "playerDetailG");
     rootG.append("g").attr("id", "playersComparisonG");
     rootG.append("g").attr("id", "generalStatsG");
-
+    rootG.append("g").attr("id", "yearSelectionG").attr("transform", "translate(550, 0)");
     let background = d3.select("#bkgG");
     background.append("rect")
-        .attr("x", 0)
-        .attr("y", 0)
-        .attr("width", ctx.width)
-        .attr("height", ctx.height)
-        .attr("fill", ctx.backgroundGrey);
+    .attr("x", 0)
+    .attr("y", 0)
+    .attr("width", ctx.width)
+    .attr("height", ctx.height)
+    .attr("fill", ctx.backgroundGrey);
     showLoadingScreen();
+    setupYearSelection(d3.select("#yearSelectionG"));
     loadPlayerPositions();
     loadRelevantAttrs();
-    initPlayersComparisonView(); //test
+    initPlayersComparisonView();
     initPlayerDetailView();
     loadData();
 }
@@ -116,9 +161,13 @@ function loadData() {
         console.log("Number of players in " + ctx.YEAR + ": " + playersPerYear[ctx.YEAR].length);
         ctx.playersPerYear = playersPerYear;
         ctx.currentDataSelection = playersPerYear[ctx.YEAR];
+        
         initPlots(ctx.playersPerYear[ctx.YEAR]);
         initSelectors(ctx.playersPerYear[ctx.YEAR]);
         initGeneralDataAnalysis();
+        
+        updatePlayerDetailView(ctx.playersPerYear[ctx.YEAR][0]);
+        
         hideLoadingScreen();
     }).catch((error) => {
         console.log(error);
@@ -1615,7 +1664,7 @@ function initPlayersComparisonView() {
     playersComparisonG.append("rect")
         .attr("transform", "translate(0,0)")
         .attr("width", 300)
-        .attr("height", 1000)
+        .attr("height", 600)
         .attr("fill", tinycolor("#6C8289").lighten(20));
 
     addPlayerFace("#playersComparisonG", 0, 0, 300, 150, 1);
@@ -1899,17 +1948,18 @@ function getComparisonStatsCfg(data) {
 //---------------------------------------------------------------------------------------------------------
 
 const generalStatsCTX = {
-
+    attrX: "overall",
+    attrY: "age",
 }
 
 function initGeneralDataAnalysis() {
     generalStatsG = d3.select("#generalStatsG")
-        .attr("transform", "translate(0, 2050)");
+        .attr("transform", "translate(0, 1650)");
     generalStatsG.append("rect")
         .attr("x", 0)
         .attr("y", 0)
         .attr("width", ctx.width)
-        .attr("height", 1000)
+        .attr("height", 600)
         .attr("fill", "#FFFFF2");
     scatterPlotG = generalStatsG.append("g")
         .attr("id", "scatterPlotG")
@@ -1940,11 +1990,7 @@ function initVariableScatterPlot(g) {
         .append("a")
         .on("click", (event, d) => {
             console.log("Clicked on " + generalStatsCTX.relevantAttrs[d]);
-            /*generalStatsCTX.comparisonAttr = attrRef[d]
-            generalStatsCTX.comparisonAttrRef = d
-            updateScatterXAxisScale();
-            showPlayerDropdown("attrXSelectionContent");
-            updateComparisonAttr(generalStatsCTX.comparisonPlayers[1], generalStatsCTX.comparisonPlayers[2]);*/
+            generalStatsCTX.attrX = generalStatsCTX.relevantAttrs[d];
         })
         .append("text")
         .attr("x", 10)
@@ -1962,11 +2008,7 @@ function initVariableScatterPlot(g) {
         .append("a")
         .on("click", (event, d) => {
             console.log("Clicked on " + generalStatsCTX.relevantAttrs[d]);
-            /*generalStatsCTX.comparisonAttr = attrRef[d]
-            generalStatsCTX.comparisonAttrRef = d
-            updateScatterYAxisScale();
-            showPlayerDropdown("attrYSelectionContent");
-            updateComparisonAttr(generalStatsCTX.comparisonPlayers[1], generalStatsCTX.comparisonPlayers[2]);*/
+            generalStatsCTX.attrY = generalStatsCTX.relevantAttrs[d];
         })
         .append("text")
         .attr("x", 10)
