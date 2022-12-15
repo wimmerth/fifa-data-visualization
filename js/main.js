@@ -2483,7 +2483,7 @@ function updateVariableScatterPlot(attribute) {
 }
 
 function computeLinearRegression(x_values, y_values) {
-    // compute linear regression
+    // compute linear regression and uncertainty for both, slope and intercept
     let x_mean = d3.mean(x_values);
     let y_mean = d3.mean(y_values);
     let x_dev = x_values.map(d => d - x_mean);
@@ -2492,7 +2492,18 @@ function computeLinearRegression(x_values, y_values) {
     let x_dev_y_dev = x_dev.map((d, i) => d * y_dev[i]);
     let slope = d3.sum(x_dev_y_dev) / d3.sum(x_dev_squared);
     let intercept = y_mean - slope * x_mean;
-    return {slope: slope, intercept: intercept};
+    let y_dev_predicted = x_dev.map((d, i) => slope * d + intercept - y_mean);
+    let y_dev_predicted_squared = y_dev_predicted.map(d => d * d);
+    let s_squared = d3.sum(y_dev_predicted_squared) / (x_values.length - 2);
+    let s = Math.sqrt(s_squared);
+    let s_slope = s / Math.sqrt(d3.sum(x_dev_squared));
+    let s_intercept = s * Math.sqrt(1 / x_values.length + x_mean * x_mean / d3.sum(x_dev_squared));
+    return {
+        slope: slope,
+        intercept: intercept,
+        s_slope: s_slope,
+        s_intercept: s_intercept
+    };
 }
 
 function getKeyByValue(object, value) {
