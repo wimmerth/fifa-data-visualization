@@ -143,7 +143,7 @@ function parsePosition(club_position, positions) {
 }
 
 function loadData() {
-    d3.csv("fifa_players_15_22.csv").then((data) => {
+    d3.csv("fifa_players_15_22_clean.csv").then((data) => {
         console.log("Number of rows: " + data.length);
         let playersPerYear = {};
         for (let i = 0; i < data.length; i++) {
