@@ -2017,7 +2017,14 @@ const generalStatsCTX = {
         "LS": "Attack",
         "ST": "Attack",
         "RS": "Attack",
-    }
+    },
+    important_leagues: [
+        "English Premier League",
+        "Spain Primera Division",
+        "Italian Serie A",
+        "German 1. Bundesliga",
+        "French Ligue 1"
+    ]
 }
 
 function initGeneralDataAnalysis() {
@@ -2155,6 +2162,9 @@ function initVariableScatterPlot(g) {
         hueScale = d3.scaleLinear()
             .domain([2, 3.5, 5])
             .range(["red", "white", "blue"]);
+    } else if (generalStatsCTX.attrHue == "league_name") {
+        hueScale = d3.scaleOrdinal(d3.schemeCategory10)
+            .domain(generalStatsCTX.important_leagues.concat(["Other"]));
     }
 
     let xAxisG = g.append("g")
@@ -2213,6 +2223,12 @@ function initVariableScatterPlot(g) {
         .attr("fill", d => {
             if (generalStatsCTX.attrHue == "position") {
                 return hueScale(generalStatsCTX.position_map[d[generalStatsCTX.attrHue]]);
+            } else if (generalStatsCTX.attrHue == "league_name") {
+                if (generalStatsCTX.important_leagues.includes(d[generalStatsCTX.attrHue])) {
+                    return hueScale(d[generalStatsCTX.attrHue]);
+                } else {
+                    return hueScale("Other");
+                }
             }
             return hueScale(d[generalStatsCTX.attrHue]);
         });
@@ -2239,6 +2255,8 @@ function initVariableScatterPlot(g) {
 
     if (generalStatsCTX.attrHue == "position") {
         uniqueLegendValues = ["Defense", "Midfield", "Attack"];
+    } else if (generalStatsCTX.attrHue == "league_name") {
+        uniqueLegendValues = generalStatsCTX.important_leagues.concat(["Other"]);
     }
 
     let legendItems = legend.selectAll("g")
@@ -2375,6 +2393,12 @@ function updateVariableScatterPlot(attribute) {
                 if (generalStatsCTX.attrHue == "position") {
                     console.log(generalStatsCTX.position_map[d[generalStatsCTX.attrHue]]);
                     return hueScale(generalStatsCTX.position_map[d[generalStatsCTX.attrHue]]);
+                } else if (generalStatsCTX.attrHue == "league_name") {
+                    if (generalStatsCTX.important_leagues.includes(d[generalStatsCTX.attrHue])) {
+                        return hueScale(d[generalStatsCTX.attrHue]);
+                    } else {
+                        return hueScale("Other");
+                    }
                 }
                 return hueScale(d[generalStatsCTX.attrHue]);
             });
@@ -2383,6 +2407,8 @@ function updateVariableScatterPlot(attribute) {
         
         if (generalStatsCTX.attrHue == "position") {
             uniqueLegendValues = ["Defense", "Midfield", "Attack"];
+        } else if (generalStatsCTX.attrHue == "league_name") {
+            uniqueLegendValues = generalStatsCTX.important_leagues.concat(["Other"]);
         }
 
         let too_long = uniqueLegendValues.length > 24;
