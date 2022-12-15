@@ -2165,8 +2165,8 @@ function initVariableScatterPlot(g) {
             .range(["#E04371", "#4DD0F7"]);
     } else if (generalStatsCTX.attrHue == "weak_foot" || generalStatsCTX.attrHue == "skill_moves") {
         hueScale = d3.scaleLinear()
-            .domain([2, 3.5, 5])
-            .range(["#B4CBE0", "#70AAE0", "#2D8AE0"]);
+            .domain([2, 5])
+            .range(["#E04371", "#4DD0F7"]);
     } else if (generalStatsCTX.attrHue == "league_name") {
         hueScale = d3.scaleOrdinal(d3.schemeCategory10)
             .domain(generalStatsCTX.important_leagues.concat(["Other"]));
@@ -2396,8 +2396,8 @@ function updateVariableScatterPlot(attribute) {
                 // .range(["red", "white", "blue"]);
         } else if (generalStatsCTX.attrHue == "weak_foot" || generalStatsCTX.attrHue == "skill_moves") {
             hueScale = d3.scaleLinear()
-                .domain([2, 3.5, 5])
-                .range(["#B4CBE0", "#70AAE0", "#2D8AE0"]);
+                .domain([2, 5])
+                .range(["#E04371", "#4DD0F7"]);
                 // .range(["red", "white", "blue"]);
         }
 
