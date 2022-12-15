@@ -2004,13 +2004,10 @@ function initGeneralDataAnalysis() {
     scatterPlotG = generalStatsG.append("g")
         .attr("id", "scatterPlotG")
         .attr("transform", "translate(400, 30)");
-    globeG = generalStatsG.append("g")
-        .attr("id", "globeG")
-        .attr("transform", `translate(${ctx.width / 2}, 0)`);
     let attrRefBasis = generalStatsCTX.relevantAttrs;
     let attrRef = {};
         for (let [key, value] of Object.entries(attrRefBasis)) {
-            if (!(["Date of birth", "Speed", "Skill Moves", "Weak Foot", "Diving", "Handling", "Kicking", "Reflexes"].includes(key))) {
+            if (!(["Date of birth", "Speed", "Skill Moves", "Weak Foot", "Diving", "Handling", "Kicking", "Reflexes", "Positioning (GK)"].includes(key))) {
                 attrRef[key] = value;
             }
         }
@@ -2018,7 +2015,6 @@ function initGeneralDataAnalysis() {
     generalStatsCTX.relevantPlayers = ctx.playersPerYear[ctx.YEAR].filter(p => p.overall > 75 && p.position != "GK")
         .sort((a, b) => b.overall - a.overall).slice(0, 200);
     initVariableScatterPlot(scatterPlotG);
-    initGlobePlot(globeG);
 }
 
 function loadRelevantAttrs() {
@@ -2212,6 +2208,26 @@ function initVariableScatterPlot(g) {
         .attr("font-family", "sans-serif")
         .attr("fill", "black")
         .text(d => d);
+
+    // plot linear regression with 95% confidence bands
+    let x = generalStatsCTX.relevantPlayers.map(d => parseFloat(d[generalStatsCTX.attrX]));
+    let y = generalStatsCTX.relevantPlayers.map(d => parseFloat(d[generalStatsCTX.attrY]));
+    res = computeLinearRegression(x, y); // slope, intercept
+
+    let x1 = x_min - 0.1 * (x_max - x_min);
+    let x2 = x_max + 0.1 * (x_max - x_min);
+    let y1 = res.slope * x1 + res.intercept;
+    let y2 = res.slope * x2 + res.intercept;
+    
+    scatterPlotG.append("line")
+        .attr("id", "regressionLine")
+        .attr("x1", xYearsScale(x1))
+        .attr("y1", yRatingScale(y1))
+        .attr("x2", xYearsScale(x2))
+        .attr("y2", yRatingScale(y2))
+        .attr("stroke", "grey")
+        .attr("stroke-width", 2)
+        .attr("stroke-dasharray", "5, 5");
 }
 
 function randomNoise(span){
@@ -2318,16 +2334,54 @@ function updateVariableScatterPlot(attribute) {
         d3.select("#legendTitle")
             .text(getKeyByValue(generalStatsCTX.categoricalAttrs, generalStatsCTX.attrHue));
     }
+    if (attribute == "x" || attribute == "y") {
+        let x_values = generalStatsCTX.relevantPlayers.map(d => parseFloat(d[generalStatsCTX.attrX]));
+        let y_values = generalStatsCTX.relevantPlayers.map(d => parseFloat(d[generalStatsCTX.attrY]));
+        let res = computeLinearRegression(x_values, y_values);
+        let x_min = d3.min(generalStatsCTX.relevantPlayers, d => parseFloat(d[generalStatsCTX.attrX]));
+        let x_max = d3.max(generalStatsCTX.relevantPlayers, d => parseFloat(d[generalStatsCTX.attrX]));
+        let xYearsScale = d3.scaleLinear()
+            .domain([
+                x_min - 0.1 * (x_max - x_min),
+                x_max + 0.1 * (x_max - x_min)
+            ])
+            .range([0, 500]);
+        let y_min = d3.min(generalStatsCTX.relevantPlayers, d => parseFloat(d[generalStatsCTX.attrY]));
+        let y_max = d3.max(generalStatsCTX.relevantPlayers, d => parseFloat(d[generalStatsCTX.attrY]));
+        let yRatingScale = d3.scaleLinear()
+            .domain([
+                y_min - 0.1 * (y_max - y_min),
+                y_max + 0.1 * (y_max - y_min)
+            ])
+            .range([500, 0]);
+        let x1 = x_min - 0.1 * (x_max - x_min);
+        let x2 = x_max + 0.1 * (x_max - x_min);
+        let y1 = res.slope * x1 + res.intercept;
+        let y2 = res.slope * x2 + res.intercept;
+        
+        d3.select("#regressionLine")
+            .transition()
+            .duration(500)
+            .attr("x1", xYearsScale(x1))
+            .attr("y1", yRatingScale(y1))
+            .attr("x2", xYearsScale(x2))
+            .attr("y2", yRatingScale(y2));
+    }
+}
+
+function computeLinearRegression(x_values, y_values) {
+    // compute linear regression
+    let x_mean = d3.mean(x_values);
+    let y_mean = d3.mean(y_values);
+    let x_dev = x_values.map(d => d - x_mean);
+    let y_dev = y_values.map(d => d - y_mean);
+    let x_dev_squared = x_dev.map(d => d * d);
+    let x_dev_y_dev = x_dev.map((d, i) => d * y_dev[i]);
+    let slope = d3.sum(x_dev_y_dev) / d3.sum(x_dev_squared);
+    let intercept = y_mean - slope * x_mean;
+    return {slope: slope, intercept: intercept};
 }
 
 function getKeyByValue(object, value) {
     return Object.keys(object).find(key => object[key] === value);
-}
-
-function initGlobePlot(g) {
-
-}
-
-function updateGlobePlot() {
-
 }

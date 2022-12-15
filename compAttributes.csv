@@ -37,7 +37,7 @@ Strength,power_strength
 Long Shots,power_long_shots
 Aggression,mentality_aggression
 Interceptions,mentality_interceptions
-Positioning,mentality_positioning
+Positioning (DEF),mentality_positioning
 Vision,mentality_vision
 Penalties,mentality_penalties
 Composure,mentality_composure
@@ -47,6 +47,6 @@ Sliding Tackle,defending_sliding_tackle
 Diving,goalkeeping_diving
 Handling,goalkeeping_handling
 Kicking,goalkeeping_kicking
-Positioning,goalkeeping_positioning
+Positioning (GK),goalkeeping_positioning
 Reflexes,goalkeeping_reflexes
 Speed,goalkeeping_speed
