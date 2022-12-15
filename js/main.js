@@ -1990,17 +1990,39 @@ const generalStatsCTX = {
     attrX: "age",
     attrY: "pace",
     attrHue: "preferred_foot",
+    position_map: {
+        "LB": "Defense",
+        "LCB": "Defense",
+        "CB": "Defense",
+        "RCB": "Defense",
+        "RB": "Defense",
+        "LWB": "Defense",
+        "RWB": "Defense",
+        "LDM": "Midfield",
+        "CDM": "Midfield",
+        "RDM": "Midfield",
+        "LM": "Midfield",
+        "LCM": "Midfield",
+        "CM": "Midfield",
+        "RCM": "Midfield",
+        "RM": "Midfield",
+        "LAM": "Midfield",
+        "CAM": "Midfield",
+        "RAM": "Midfield",
+        "LW": "Attack",
+        "LF": "Attack",
+        "CF": "Attack",
+        "RF": "Attack",
+        "RW": "Attack",
+        "LS": "Attack",
+        "ST": "Attack",
+        "RS": "Attack",
+    }
 }
 
 function initGeneralDataAnalysis() {
     generalStatsG = d3.select("#generalStatsG")
         .attr("transform", "translate(0, 1650)");
-    generalStatsG.append("rect")
-        .attr("x", 0)
-        .attr("y", 0)
-        .attr("width", ctx.width)
-        .attr("height", 600)
-        .attr("fill", "#FFFFF2");
     scatterPlotG = generalStatsG.append("g")
         .attr("id", "scatterPlotG")
         .attr("transform", "translate(400, 30)");
@@ -2028,9 +2050,7 @@ function loadRelevantAttrs() {
     console.log("Loaded relevant attributes");
     let categoricalPlayerAttributes = {
         "Position": "position",
-        "Country": "nationality_name",
         "League": "league_name",
-        "Club": "club_name",
         "Preferred Foot": "preferred_foot",
         "Skill Moves": "skill_moves",
         "Weak Foot": "weak_foot"
@@ -2127,15 +2147,38 @@ function initVariableScatterPlot(g) {
 
     let hueScale = d3.scaleOrdinal(d3.schemeCategory10)
         .domain(generalStatsCTX.relevantPlayers.map(d => d[generalStatsCTX.attrHue]));
+    
+    if (generalStatsCTX.attrHue == "position") {
+        hueScale = d3.scaleOrdinal(d3.schemeCategory10)
+            .domain(["Defense", "Midfield", "Attack"]);
+    } else if (generalStatsCTX.attrHue == "weak_foot" || generalStatsCTX.attrHue == "skill_moves") {
+        hueScale = d3.scaleLinear()
+            .domain([2, 3.5, 5])
+            .range(["red", "white", "blue"]);
+    }
 
-    g.append("g")
+    let xAxisG = g.append("g")
         .attr("id", "xAxis")
         .attr("transform", "translate(0, 500)")
         .call(xAxis);
-    g.append("g")
+    xAxisG.selectAll("text")
+        .attr("fill", "white");
+    xAxisG.selectAll("line")
+        .attr("stroke", "white");
+    xAxisG.selectAll("path")
+        .attr("stroke", "white");
+    
+    let yAxisG = g.append("g")
         .attr("id", "yAxis")
         .attr("transform", "translate(0, 0)")
         .call(yAxis);
+    yAxisG.selectAll("text")
+        .attr("fill", "white");
+    yAxisG.selectAll("line")
+        .attr("stroke", "white");
+    yAxisG.selectAll("path")
+        .attr("stroke", "white");
+
     g.append("text")
         .attr("id", "xAxisLabel")
         .attr("x", 250)
@@ -2143,7 +2186,7 @@ function initVariableScatterPlot(g) {
         .attr("font-size", 15)
         .attr("font-weight", "bold")
         .attr("font-family", "sans-serif")
-        .attr("fill", "black")
+        .attr("fill", "white")
         .text(getKeyByValue(generalStatsCTX.relevantAttrs, generalStatsCTX.attrX));
     g.append("text")
         .attr("id", "yAxisLabel")
@@ -2152,7 +2195,7 @@ function initVariableScatterPlot(g) {
         .attr("font-size", 15)
         .attr("font-weight", "bold")
         .attr("font-family", "sans-serif")
-        .attr("fill", "black")
+        .attr("fill", "white")
         .attr("transform", "rotate(-90)")
         .text(getKeyByValue(generalStatsCTX.relevantAttrs, generalStatsCTX.attrY));
     
@@ -2167,7 +2210,12 @@ function initVariableScatterPlot(g) {
         .attr("cx", d => xYearsScale(parseFloat(d[generalStatsCTX.attrX]) + randomNoise(x_max - x_min)))
         .attr("cy", d => yRatingScale(parseFloat(d[generalStatsCTX.attrY]) + randomNoise(y_max - y_min)))
         .attr("r", 3)
-        .attr("fill", d => hueScale(d[generalStatsCTX.attrHue]));
+        .attr("fill", d => {
+            if (generalStatsCTX.attrHue == "position") {
+                return hueScale(generalStatsCTX.position_map[d[generalStatsCTX.attrHue]]);
+            }
+            return hueScale(d[generalStatsCTX.attrHue]);
+        });
     
     scatteredPoints.append("title")
         .text(d => `${d.short_name} (${d.position})\n${d.club_name}\n${d.nationality_name}`);
@@ -2183,11 +2231,15 @@ function initVariableScatterPlot(g) {
         .attr("font-size", 15)
         .attr("font-weight", "bold")
         .attr("font-family", "sans-serif")
-        .attr("fill", "black")
+        .attr("fill", "white")
         .text(getKeyByValue(generalStatsCTX.categoricalAttrs, generalStatsCTX.attrHue));
     
     let uniqueLegendValues = [...new Set(generalStatsCTX.relevantPlayers.map(d => d[generalStatsCTX.attrHue]))];
     uniqueLegendValues = uniqueLegendValues.sort((a, b) => a.localeCompare(b));
+
+    if (generalStatsCTX.attrHue == "position") {
+        uniqueLegendValues = ["Defense", "Midfield", "Attack"];
+    }
 
     let legendItems = legend.selectAll("g")
         .data(uniqueLegendValues)
@@ -2206,7 +2258,7 @@ function initVariableScatterPlot(g) {
         .attr("y", 5)
         .attr("font-size", 15)
         .attr("font-family", "sans-serif")
-        .attr("fill", "black")
+        .attr("fill", "white")
         .text(d => d);
 
     // plot linear regression with 95% confidence bands
@@ -2252,10 +2304,20 @@ function updateVariableScatterPlot(attribute) {
             .transition()
             .duration(500)
             .attr("cx", d => xYearsScale(parseFloat(d[generalStatsCTX.attrX]) + randomNoise(x_max - x_min)));
-        d3.select("#xAxis")
+        let xAxisG = d3.select("#xAxis")
             .transition()
             .duration(500)
             .call(xAxis);
+        xAxisG.selectAll("text")
+            .attr("fill", "white");
+        if (generalStatsCTX.attrX == "value_eur") {
+            xAxisG.selectAll("text")
+                .text(d => playerValueString(parseFloat(d)));
+        }
+        xAxisG.selectAll("path")
+            .attr("stroke", "white");
+        xAxisG.selectAll("line")
+            .attr("stroke", "white");
         d3.select("#xAxisLabel")
             .transition()
             .duration(500)
@@ -2274,10 +2336,20 @@ function updateVariableScatterPlot(attribute) {
             .transition()
             .duration(500)
             .attr("cy", d => yRatingScale(parseFloat(d[generalStatsCTX.attrY]) + randomNoise(y_max - y_min)));
-        d3.select("#yAxis")
+        let yAxisG = d3.select("#yAxis")
             .transition()
             .duration(500)
             .call(yAxis);
+        yAxisG.selectAll("text")
+            .attr("fill", "white");
+        if (generalStatsCTX.attrY == "value_eur") {
+            yAxisG.selectAll("text")
+                .text(d => playerValueString(parseFloat(d)));
+        }
+        yAxisG.selectAll("path")
+            .attr("stroke", "white");
+        yAxisG.selectAll("line")
+            .attr("stroke", "white");
         d3.select("#yAxisLabel")
             .transition()
             .duration(500)
@@ -2286,12 +2358,33 @@ function updateVariableScatterPlot(attribute) {
         let hueScale = d3.scaleOrdinal()
             .domain(generalStatsCTX.relevantPlayers.map(d => d[generalStatsCTX.attrHue]))
             .range(d3.schemeCategory10);
+        
+        if (generalStatsCTX.attrHue == "position") {
+            hueScale = d3.scaleOrdinal(d3.schemeCategory10)
+                .domain(["Defense", "Midfield", "Attack"]);
+        } else if (generalStatsCTX.attrHue == "weak_foot" || generalStatsCTX.attrHue == "skill_moves") {
+            hueScale = d3.scaleLinear()
+                .domain([2, 3.5, 5])
+                .range(["red", "white", "blue"]);
+        }
+
         scatterPlotG.selectAll("circle")
             .transition()
             .duration(500)
-            .attr("fill", d => hueScale(d[generalStatsCTX.attrHue]));
+            .attr("fill", d => {
+                if (generalStatsCTX.attrHue == "position") {
+                    console.log(generalStatsCTX.position_map[d[generalStatsCTX.attrHue]]);
+                    return hueScale(generalStatsCTX.position_map[d[generalStatsCTX.attrHue]]);
+                }
+                return hueScale(d[generalStatsCTX.attrHue]);
+            });
         let uniqueLegendValues = [...new Set(generalStatsCTX.relevantPlayers.map(d => d[generalStatsCTX.attrHue]))];
         uniqueLegendValues = uniqueLegendValues.sort((a, b) => a.localeCompare(b));
+        
+        if (generalStatsCTX.attrHue == "position") {
+            uniqueLegendValues = ["Defense", "Midfield", "Attack"];
+        }
+
         let too_long = uniqueLegendValues.length > 24;
         if (too_long) {
             uniqueLegendValues = uniqueLegendValues.slice(0, 24);
@@ -2317,7 +2410,7 @@ function updateVariableScatterPlot(attribute) {
             .attr("y", 5)
             .attr("font-size", 15)
             .attr("font-family", "sans-serif")
-            .attr("fill", "black")
+            .attr("fill", "white")
             .text(d => d);
         
         if (too_long) {
@@ -2327,7 +2420,7 @@ function updateVariableScatterPlot(attribute) {
                 .attr("y", 70 + 24 * 20)
                 .attr("font-size", 15)
                 .attr("font-family", "sans-serif")
-                .attr("fill", "black")
+                .attr("fill", "white")
                 .text("...");
         }
         
