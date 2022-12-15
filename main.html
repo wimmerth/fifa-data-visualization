@@ -58,16 +58,6 @@ rect.selection {
     <!-- Add a scrollable year selector in the top middle of the website -->
     <body onload="createViz()">
         <div id="main">
-            <div id="yearSelector" style="position: absolute; top: 8px; left: 900px;">
-                <button class="button" onclick="updateYear(-1)">-1</button>
-                <!-- text field to show currently selected year-->
-                <span class="label" id="yearLabel">2022</span>
-                <button class="button" onclick="updateYear(1)">+1</button>
-            </div>
-            <!-- <div id="playerSelectorFrame"></div> -->
-            <!-- <div style="position: fixed; top: 50% ; left: 50%; transform: translate(-50%, 0);">
-                <button class="button" onclick="initPlayerSelector()">Player 1</button>
-            </div> -->
             <div class="player1Dropdown">
                 <button onclick="showPlayerDropdown('player1DropdownContent')" class="dropbtn">Select Player 1</button>
                 <div id="player1DropdownContent" class="dropdown-content">

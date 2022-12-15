@@ -38,7 +38,7 @@
     font-size: 16px;
     border: none;
     display: inline-block;
-    width: 302px;
+    width: 300px;
     height: 40px;
     cursor: pointer;
     background-image: url('./img/icons8-down-arrow-32.png');
@@ -104,14 +104,14 @@
   }
   .scatterAttrSelection1 {
     position: absolute;
-    top: 2050px;
-    left: 400px;
+    top: 1688px;
+    left: 8px;
     display: inline-block;
   }
   .scatterAttrSelection2{
     position: absolute;
-    top: 2050px;
-    left: 800px;
+    top: 1748px;
+    left: 8px;
     display: inline-block;
   }
   
