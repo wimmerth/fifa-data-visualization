@@ -133,9 +133,12 @@ function loadPlayerPositions() {
 }
 
 function parsePosition(club_position, positions) {
-    if (club_position == "SUB") {
+    if (club_position == "SUB" || club_position == "RES" || club_position == "") {
         let pos = positions.split(",");
         let position = pos[0];
+        if (position == "" && pos.length > 1) {
+            position = pos[1];
+        }
         return position;
     } else {
         return club_position;
@@ -150,6 +153,12 @@ function loadData() {
             let row = data[i];
             let year = row["year"];
             let position = parsePosition(row["club_position"], row["player_positions"]);
+            if (row["league_name"] == ""){
+                row["league_name"] = "Unknown";
+            }
+            if (row["club_name"] == ""){
+                row["club_name"] = "Unknown";
+            }
             row["position"] = position;
             if (year in playersPerYear) {
                 playersPerYear[year].push(row);
@@ -1641,7 +1650,6 @@ function updateYAxisScale() {
     let min_values = []
     Object.keys(ctx.comparisonPlayers).forEach((key) => {
         let history = attributeHistory(ctx.comparisonPlayers[key].sofifa_id, attr);
-        console.log(history);
         let history_min = d3.min(history, d => {
             if (d != null){
                 return d[1];
@@ -1979,8 +1987,9 @@ function getComparisonStatsCfg(data) {
 //---------------------------------------------------------------------------------------------------------
 
 const generalStatsCTX = {
-    attrX: "overall",
-    attrY: "age",
+    attrX: "age",
+    attrY: "pace",
+    attrHue: "preferred_foot",
 }
 
 function initGeneralDataAnalysis() {
@@ -1994,12 +2003,22 @@ function initGeneralDataAnalysis() {
         .attr("fill", "#FFFFF2");
     scatterPlotG = generalStatsG.append("g")
         .attr("id", "scatterPlotG")
-        .attr("transform", "translate(0, 0)");
+        .attr("transform", "translate(400, 30)");
     globeG = generalStatsG.append("g")
         .attr("id", "globeG")
         .attr("transform", `translate(${ctx.width / 2}, 0)`);
+    let attrRefBasis = generalStatsCTX.relevantAttrs;
+    let attrRef = {};
+        for (let [key, value] of Object.entries(attrRefBasis)) {
+            if (!(["Date of birth", "Speed", "Skill Moves", "Weak Foot", "Diving", "Handling", "Kicking", "Reflexes"].includes(key))) {
+                attrRef[key] = value;
+            }
+        }
+    generalStatsCTX.relevantAttrs = attrRef;
+    generalStatsCTX.relevantPlayers = ctx.playersPerYear[ctx.YEAR].filter(p => p.overall > 75 && p.position != "GK")
+        .sort((a, b) => b.overall - a.overall).slice(0, 200);
     initVariableScatterPlot(scatterPlotG);
-    initGlobePlot(globeG); 
+    initGlobePlot(globeG);
 }
 
 function loadRelevantAttrs() {
@@ -2011,6 +2030,16 @@ function loadRelevantAttrs() {
     });
     generalStatsCTX.relevantAttrs = dict;
     console.log("Loaded relevant attributes");
+    let categoricalPlayerAttributes = {
+        "Position": "position",
+        "Country": "nationality_name",
+        "League": "league_name",
+        "Club": "club_name",
+        "Preferred Foot": "preferred_foot",
+        "Skill Moves": "skill_moves",
+        "Weak Foot": "weak_foot"
+    }
+    generalStatsCTX.categoricalAttrs = categoricalPlayerAttributes;
 }
 
 function initVariableScatterPlot(g) {
@@ -2021,7 +2050,12 @@ function initVariableScatterPlot(g) {
         .append("a")
         .on("click", (event, d) => {
             console.log("Clicked on " + generalStatsCTX.relevantAttrs[d]);
+            if (generalStatsCTX.attrX == generalStatsCTX.relevantAttrs[d]) {
+                return;
+            }
             generalStatsCTX.attrX = generalStatsCTX.relevantAttrs[d];
+            updateVariableScatterPlot("x");
+            showPlayerDropdown("attrXSelectionContent");
         })
         .append("text")
         .attr("x", 10)
@@ -2039,7 +2073,12 @@ function initVariableScatterPlot(g) {
         .append("a")
         .on("click", (event, d) => {
             console.log("Clicked on " + generalStatsCTX.relevantAttrs[d]);
+            if (generalStatsCTX.attrY == generalStatsCTX.relevantAttrs[d]) {
+                return;
+            }
             generalStatsCTX.attrY = generalStatsCTX.relevantAttrs[d];
+            updateVariableScatterPlot("y");
+            showPlayerDropdown("attrYSelectionContent");
         })
         .append("text")
         .attr("x", 10)
@@ -2049,10 +2088,240 @@ function initVariableScatterPlot(g) {
         .attr("font-family", "sans-serif")
         .attr("fill", "#18414e")
         .text(d => d);
+    
+    d3.select("#attrHueSelectionContent")
+        .selectAll("attributes")
+        .data(Object.keys(generalStatsCTX.categoricalAttrs))
+        .enter()
+        .append("a")
+        .on("click", (event, d) => {
+            console.log("Clicked on " + generalStatsCTX.categoricalAttrs[d]);
+            generalStatsCTX.attrHue = generalStatsCTX.categoricalAttrs[d];
+            updateVariableScatterPlot("hue");
+            showPlayerDropdown("attrHueSelectionContent");
+        })
+        .append("text")
+        .attr("x", 10)
+        .attr("y", 0)
+        .attr("font-size", 15)
+        .attr("font-weight", "bold")
+        .attr("font-family", "sans-serif")
+        .attr("fill", "#18414e")
+        .text(d => d);
+    
+    x_min = d3.min(generalStatsCTX.relevantPlayers, d => parseFloat(d[generalStatsCTX.attrX]));
+    x_max = d3.max(generalStatsCTX.relevantPlayers, d => parseFloat(d[generalStatsCTX.attrX]));
+    y_min = d3.min(generalStatsCTX.relevantPlayers, d => parseFloat(d[generalStatsCTX.attrY]));
+    y_max = d3.max(generalStatsCTX.relevantPlayers, d => parseFloat(d[generalStatsCTX.attrY]));
+
+    let xYearsScale = d3.scaleLinear()
+        .domain([
+            x_min - 0.1 * (x_max - x_min),
+            x_max + 0.1 * (x_max - x_min)
+        ])
+        .range([0, 500]);
+    let yRatingScale = d3.scaleLinear()
+        .domain([
+            y_min - 0.1 * (y_max - y_min),
+            y_max + 0.1 * (y_max - y_min)
+        ])
+        .range([500, 0]);
+    let xAxis = d3.axisBottom(xYearsScale);
+    let yAxis = d3.axisLeft(yRatingScale);
+
+    let hueScale = d3.scaleOrdinal(d3.schemeCategory10)
+        .domain(generalStatsCTX.relevantPlayers.map(d => d[generalStatsCTX.attrHue]));
+
+    g.append("g")
+        .attr("id", "xAxis")
+        .attr("transform", "translate(0, 500)")
+        .call(xAxis);
+    g.append("g")
+        .attr("id", "yAxis")
+        .attr("transform", "translate(0, 0)")
+        .call(yAxis);
+    g.append("text")
+        .attr("id", "xAxisLabel")
+        .attr("x", 250)
+        .attr("y", 550)
+        .attr("font-size", 15)
+        .attr("font-weight", "bold")
+        .attr("font-family", "sans-serif")
+        .attr("fill", "black")
+        .text(getKeyByValue(generalStatsCTX.relevantAttrs, generalStatsCTX.attrX));
+    g.append("text")
+        .attr("id", "yAxisLabel")
+        .attr("x", -250)
+        .attr("y", -50)
+        .attr("font-size", 15)
+        .attr("font-weight", "bold")
+        .attr("font-family", "sans-serif")
+        .attr("fill", "black")
+        .attr("transform", "rotate(-90)")
+        .text(getKeyByValue(generalStatsCTX.relevantAttrs, generalStatsCTX.attrY));
+    
+    scatterPlotG = g.append("g")
+        .attr("id", "scatterPlot")
+        .attr("transform", "translate(0, 0)");
+    
+    scatteredPoints = scatterPlotG.selectAll("circle")
+        .data(generalStatsCTX.relevantPlayers)
+        .enter()
+        .append("circle")
+        .attr("cx", d => xYearsScale(parseFloat(d[generalStatsCTX.attrX]) + randomNoise(x_max - x_min)))
+        .attr("cy", d => yRatingScale(parseFloat(d[generalStatsCTX.attrY]) + randomNoise(y_max - y_min)))
+        .attr("r", 4)
+        .attr("fill", d => hueScale(d[generalStatsCTX.attrHue]));
+    
+    scatteredPoints.append("title")
+        .text(d => `${d.short_name} (${d.position})\n${d.club_name}\n${d.nationality_name}`);
+
+    let legend = g.append("g")
+        .attr("id", "legend")
+        .attr("transform", "translate(0, 0)");
+    
+    legend.append("text")
+        .attr("id", "legendTitle")
+        .attr("x", 550)
+        .attr("y", 50)
+        .attr("font-size", 15)
+        .attr("font-weight", "bold")
+        .attr("font-family", "sans-serif")
+        .attr("fill", "black")
+        .text(getKeyByValue(generalStatsCTX.categoricalAttrs, generalStatsCTX.attrHue));
+    
+    let uniqueLegendValues = [...new Set(generalStatsCTX.relevantPlayers.map(d => d[generalStatsCTX.attrHue]))];
+    uniqueLegendValues = uniqueLegendValues.sort((a, b) => a.localeCompare(b));
+
+    let legendItems = legend.selectAll("g")
+        .data(uniqueLegendValues)
+        .enter()
+        .append("g")
+        .attr("transform", (d, i) => `translate(550, ${70 + i * 20})`);
+    
+    legendItems.append("circle")
+        .attr("cx", 0)
+        .attr("cy", 0)
+        .attr("r", 5)
+        .attr("fill", d => hueScale(d));
+    
+    legendItems.append("text")
+        .attr("x", 10)
+        .attr("y", 5)
+        .attr("font-size", 15)
+        .attr("font-family", "sans-serif")
+        .attr("fill", "black")
+        .text(d => d);
 }
 
-function updateVariableScatterPlot(var1, var2) {
+function randomNoise(span){
+    span = 0.05 * span;
+    let rand = Math.random() * span - span / 2;
+    return rand;
+}
 
+function updateVariableScatterPlot(attribute) {
+    scatterPlotG = d3.select("#scatterPlot");
+    if (attribute == "x") {
+        let x_min = d3.min(generalStatsCTX.relevantPlayers, d => parseFloat(d[generalStatsCTX.attrX]));
+        let x_max = d3.max(generalStatsCTX.relevantPlayers, d => parseFloat(d[generalStatsCTX.attrX]));
+        let xYearsScale = d3.scaleLinear()
+        .domain([
+            x_min - 0.1 * (x_max - x_min),
+            x_max + 0.1 * (x_max - x_min)
+        ])
+        .range([0, 500]);
+        let xAxis = d3.axisBottom(xYearsScale);
+        scatterPlotG.selectAll("circle")
+            .transition()
+            .duration(500)
+            .attr("cx", d => xYearsScale(parseFloat(d[generalStatsCTX.attrX]) + randomNoise(x_max - x_min)));
+        d3.select("#xAxis")
+            .transition()
+            .duration(500)
+            .call(xAxis);
+        d3.select("#xAxisLabel")
+            .transition()
+            .duration(500)
+            .text(getKeyByValue(generalStatsCTX.relevantAttrs, generalStatsCTX.attrX));
+    } else if (attribute == "y") {
+        let y_min = d3.min(generalStatsCTX.relevantPlayers, d => parseFloat(d[generalStatsCTX.attrY]));
+        let y_max = d3.max(generalStatsCTX.relevantPlayers, d => parseFloat(d[generalStatsCTX.attrY]));
+        let yRatingScale = d3.scaleLinear()
+        .domain([
+            y_min - 0.1 * (y_max - y_min),
+            y_max + 0.1 * (y_max - y_min)
+        ])
+        .range([500, 0]);
+        let yAxis = d3.axisLeft(yRatingScale);
+        scatterPlotG.selectAll("circle")
+            .transition()
+            .duration(500)
+            .attr("cy", d => yRatingScale(parseFloat(d[generalStatsCTX.attrY]) + randomNoise(y_max - y_min)));
+        d3.select("#yAxis")
+            .transition()
+            .duration(500)
+            .call(yAxis);
+        d3.select("#yAxisLabel")
+            .transition()
+            .duration(500)
+            .text(getKeyByValue(generalStatsCTX.relevantAttrs, generalStatsCTX.attrY));
+    } else if (attribute == "hue") {
+        let hueScale = d3.scaleOrdinal()
+            .domain(generalStatsCTX.relevantPlayers.map(d => d[generalStatsCTX.attrHue]))
+            .range(d3.schemeCategory10);
+        scatterPlotG.selectAll("circle")
+            .transition()
+            .duration(500)
+            .attr("fill", d => hueScale(d[generalStatsCTX.attrHue]));
+        let uniqueLegendValues = [...new Set(generalStatsCTX.relevantPlayers.map(d => d[generalStatsCTX.attrHue]))];
+        uniqueLegendValues = uniqueLegendValues.sort((a, b) => a.localeCompare(b));
+        let too_long = uniqueLegendValues.length > 24;
+        if (too_long) {
+            uniqueLegendValues = uniqueLegendValues.slice(0, 24);
+        }
+
+        d3.select("#legend").selectAll("g").remove();
+        d3.select("#legendTooLong").remove();
+    
+        let legendItems = d3.select("#legend").selectAll("g")
+            .data(uniqueLegendValues)
+            .enter()
+            .append("g")
+            .attr("transform", (d, i) => `translate(550, ${70 + i * 20})`);
+        
+        legendItems.append("circle")
+            .attr("cx", 0)
+            .attr("cy", 0)
+            .attr("r", 5)
+            .attr("fill", d => hueScale(d));
+        
+        legendItems.append("text")
+            .attr("x", 10)
+            .attr("y", 5)
+            .attr("font-size", 15)
+            .attr("font-family", "sans-serif")
+            .attr("fill", "black")
+            .text(d => d);
+        
+        if (too_long) {
+            d3.select("#legend").append("text")
+                .attr("id", "legendTooLong")
+                .attr("x", 550)
+                .attr("y", 70 + 24 * 20)
+                .attr("font-size", 15)
+                .attr("font-family", "sans-serif")
+                .attr("fill", "black")
+                .text("...");
+        }
+        
+        d3.select("#legendTitle")
+            .text(getKeyByValue(generalStatsCTX.categoricalAttrs, generalStatsCTX.attrHue));
+    }
+}
+
+function getKeyByValue(object, value) {
+    return Object.keys(object).find(key => object[key] === value);
 }
 
 function initGlobePlot(g) {

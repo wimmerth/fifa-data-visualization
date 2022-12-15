@@ -114,6 +114,12 @@
     left: 8px;
     display: inline-block;
   }
+  .scatterAttrSelectionHue{
+    position: absolute;
+    top: 1808px;
+    left: 8px;
+    display: inline-block;
+  }
   
   /* Dropdown Content (Hidden by Default) */
   .dropdown-content {
