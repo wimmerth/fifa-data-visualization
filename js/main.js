@@ -1,3 +1,26 @@
+/*
+MIT License
+
+Copyright (c) 2022 Thomas Martin Wimmer, Haileleul Zeyede Haile
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
 const ctx = {
     YEAR: 2022,
     width: 1900,
@@ -90,6 +113,10 @@ function createViz() {
     .attr("fill", ctx.backgroundGrey);
     showLoadingScreen();
     setupYearSelection(d3.select("#yearSelectionG"));
+    popupG = rootG.append("g")
+        .attr("id", "popupG2")
+        .attr("transform", "translate(25, 95)");
+    addInformationBubble(popupG, ["Click and drag the mouse over the football field", "to select the areas you are interested in.", "When changing this selection, you will observe", "a change in the top-10 player list on the right.", "You can get more details on a player by clicking", "on the respective list item."], "#6C8289", "white");
     loadPlayerPositions();
     loadRelevantAttrs();
     initPlayersComparisonView();
@@ -220,10 +247,7 @@ function updatePlotsOnSelection(year, selection) {
     data = ctx.playersPerYear[year].filter(d => playerPositions.includes(d.position));
     ctx.currentDataSelection = data;
     updateBestPlayerList(data);
-    // groupStatsRadar(data);
     drawRadar("statsG", "rootG", data, getGroupStatsCfg(), "group");
-    // playerStatsRadar(data);
-    // statsRadar(data);
 }
 
 function findPlayerPositions(selection) {
@@ -1192,6 +1216,11 @@ function initPlayerDetailView() {
     for (let i = 0; i < 6; i++) {
         initPlayerStatDetailBar(572.5, i * 40 + 445, playerDetailG, Object.keys(statDicts.goalkeeping_stats)[i], Object.values(statDicts.goalkeeping_stats)[i], 0);
     }
+
+    popupG = playerDetailG.append("g")
+        .attr("id", "popupG3")
+        .attr("transform", "translate(-25,-5)");
+    addInformationBubble(popupG, ["Hover over single attributes to compare the value", "against other players in the selected area, and", "the attribute value history for the player.", "Also, check what happens when hovering","over the overall value."], "#6C8289", "white");
 }
 
 function updatePlayerDetailView(player) {
@@ -1631,9 +1660,14 @@ function initSelectors(playerList) {
             console.log("Clicked on " + attrRef[d]);
             ctx.comparisonAttr = attrRef[d]
             ctx.comparisonAttrRef = d
-            updateYAxisScale();
+            if (Object.keys(ctx.comparisonPlayers).length != 0) {
+                updateYAxisScale();
+                updateComparisonAttr(ctx.comparisonPlayers[1], ctx.comparisonPlayers[2]);
+            }
             showPlayerDropdown("attrSelectionContent");
-            updateComparisonAttr(ctx.comparisonPlayers[1], ctx.comparisonPlayers[2]);
+            // update y label
+            d3.select("#yAxisLabelComp1")
+                .text(d);
         })
         .append("text")
         .attr("x", 10)
@@ -1664,10 +1698,14 @@ function updateYAxisScale() {
         .domain([min - 10, 100])
         .range([475, 75]);
 
-    d3.select("#yAxisComp1")
+    axis = d3.select("#yAxisComp1")
         .transition()
         .duration(500)
         .call(d3.axisLeft(ctx.yRatingScale));
+        
+    axis.selectAll("text").attr("fill", tinycolor("#18414e").darken(10).toString());
+    axis.selectAll("line").attr("stroke", tinycolor("#18414e").darken(10).toString());
+    axis.selectAll("path").attr("stroke", tinycolor("#18414e").darken(10).toString());
 }
 
 
@@ -1801,19 +1839,46 @@ function drawComparisonAxis(x, y) {
         .range([x, x + width])
         .padding([0.8])
     // x axis
-    axis.append("g")
+    let xAxis = axis.append("g")
         .attr("id", "xAxisComp1")
         .attr("transform", `translate(0,${y + height})`)
         .call(d3.axisBottom(ctx.xYearsScale));
+    
+    // x axis label
+    axis.append("text")
+        .attr("id", "xAxisLabelComp1")
+        .attr("x", x + width / 2)
+        .attr("y", y + height + 50)
+        .attr("font-size", 20)
+        .attr("font-weight", "bold")
+        .attr("fill", "#18414e")
+        .attr("text-anchor", "middle")
+        .text("Year");
+    
     // y axis
-    axis.append("g")
+    let yAxis = axis.append("g")
         .attr("id", "yAxisComp1")
         .attr("transform", `translate(${x},${0})`)
         .call(d3.axisLeft(ctx.yRatingScale));
+    
+    // y axis label
+    axis.append("text")
+        .attr("id", "yAxisLabelComp1")
+        .attr("x", - (y + height / 2))
+        .attr("y", x - 40)
+        .attr("transform", "rotate(-90)")
+        .attr("font-size", 20)
+        .attr("font-weight", "bold")
+        .attr("fill", "#18414e")
+        .attr("text-anchor", "middle")
+        .text("Overall");
 
-    d3.selectAll(".domain").style("stroke", tinycolor("#18414e").darken(40));
-    d3.selectAll(".tick").select("line").style("stroke", tinycolor("#18414e").darken(40));
-    d3.selectAll(".tick").select("text").attr("fill", "#18414e").attr("font-size", 15);
+    xAxis.selectAll("line").attr("stroke", tinycolor("#18414e").darken(10).toString());
+    xAxis.selectAll("path").attr("stroke", tinycolor("#18414e").darken(10).toString());
+    xAxis.selectAll("text").attr("fill", tinycolor("#18414e").darken(10).toString());
+    yAxis.selectAll("line").attr("stroke", tinycolor("#18414e").darken(10).toString());
+    yAxis.selectAll("path").attr("stroke", tinycolor("#18414e").darken(10).toString());
+    yAxis.selectAll("text").attr("fill", tinycolor("#18414e").darken(10).toString());
 }
 
 function updatePlayerComparisonView(playerNo, player) {
@@ -2259,6 +2324,11 @@ function initVariableScatterPlot(g) {
     scatteredPoints.append("title")
         .text(d => `${d.short_name} (${d.position})\n${d.club_name}\n${d.nationality_name}`);
 
+    popupG = g.append("g")
+        .attr("id", "popupG")
+        .attr("transform", "translate(700, 30)");
+    addInformationBubble(popupG, ["We found that there are various interesting attribute combinations:", " - Age (x) vs Acceleration (y) vs Preferred Foot (hue)", " - Overall (x) vs Wage (y) vs League (hue)", " - Age (x) vs Penalties (y) vs Position (hue)", " - Dribbling (x) vs Ball Control (y) vs Skill Moves (hue)"], "#6C8289", "white");
+
     let legend = g.append("g")
         .attr("id", "legend")
         .attr("transform", "translate(0, 0)");
@@ -2568,4 +2638,53 @@ function setupCredits(g){
         .attr("font-size", 15)
         .attr("fill", "grey")
         .text(d => d);
+}
+
+function addInformationBubble(g, informationText, colorBg, colorText){
+    let popupG = g.append("g")
+        .attr("id", "popupG_" + g.attr("id"));
+
+    g.append("circle")
+        .attr("cx", 0)
+        .attr("cy", 0)
+        .attr("r", 15)
+        .attr("fill", colorBg);
+    
+    g.append("text")
+        .attr("x", 0)
+        .attr("y", 5)
+        .attr("font-size", 15)
+        .attr("font-weight", "bold")
+        .attr("fill", colorText)
+        .attr("text-anchor", "middle")
+        .text("?");
+    
+    g.append("circle")
+        .attr("cx", 0)
+        .attr("cy", 0)
+        .attr("r", 15)
+        .attr("fill", "transparent")
+        .on("mouseover", function(){
+            let popup = popupG.append("g");
+            popup.append("rect")
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("width", d3.max(informationText, t => t.length) * 6.8 + 10)
+                .attr("height", informationText.length * 20 + 10)
+                .attr("fill", tinycolor(colorBg).darken(20).toString()); 
+            popup.selectAll("text")
+                .data(informationText)
+                .enter()
+                .append("text")
+                .attr("x", 10)
+                .attr("y", (d, i) => 20 + 20 * i)
+                .attr("font-size", 15)
+                .attr("fill", colorText)
+                .text(d => d);
+        })
+        .on("mouseout", function(){
+            popupG.select("g")
+                .remove();
+        });
+
 }
