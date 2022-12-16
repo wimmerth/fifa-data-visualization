@@ -110,6 +110,7 @@ function showLoadingScreen() {
         'offsetX': 0,
         'lockScroll': false,
         'containerID': null,
+
     });
     JsLoadingOverlay.show();
 }
@@ -2033,6 +2034,10 @@ function initGeneralDataAnalysis() {
     scatterPlotG = generalStatsG.append("g")
         .attr("id", "scatterPlotG")
         .attr("transform", "translate(400, 30)");
+    creditG = generalStatsG.append("g")
+        .attr("id", "creditG")
+        .attr("transform", "translate(1150, 450)");
+    setupCredits(creditG);
     let attrRefBasis = generalStatsCTX.relevantAttrs;
     let attrRef = {};
         for (let [key, value] of Object.entries(attrRefBasis)) {
@@ -2223,6 +2228,8 @@ function initVariableScatterPlot(g) {
         .data(generalStatsCTX.relevantPlayers)
         .enter()
         .append("circle")
+        .attr("class", "scatteredPoint")
+        .attr("id", d => `scatter_${d.sofifa_id}`)
         .attr("cx", d => xYearsScale(parseFloat(d[generalStatsCTX.attrX]) + randomNoise(x_max - x_min)))
         .attr("cy", d => yRatingScale(parseFloat(d[generalStatsCTX.attrY]) + randomNoise(y_max - y_min)))
         .attr("r", 3)
@@ -2237,6 +2244,16 @@ function initVariableScatterPlot(g) {
                 }
             }
             return hueScale(d[generalStatsCTX.attrHue]);
+        })
+        .on("mouseover", (event,d) => {
+            d3.selectAll(".scatteredPoint")
+                .attr("fill-opacity", 0.5);
+            d3.select(`#scatter_${d.sofifa_id}`)
+                .attr("fill-opacity", 1);
+        })
+        .on("mouseout", (d,i) => {
+            d3.selectAll(".scatteredPoint")
+                .attr("fill-opacity", 1);
         });
     
     scatteredPoints.append("title")
@@ -2380,27 +2397,20 @@ function updateVariableScatterPlot(attribute) {
             .text(getKeyByValue(generalStatsCTX.relevantAttrs, generalStatsCTX.attrY));
     } else if (attribute == "hue") {
         let hueScale = d3.scaleOrdinal()
-            // .domain(generalStatsCTX.relevantPlayers.map(d => d[generalStatsCTX.attrHue]))
             .range(['#4DD0F7','#27E8AB', '#E04371', '#867C9C', '#7C9C81', '#E8E8E8']);
-            // .range(d3.schemeCategory10);
         
         if (generalStatsCTX.attrHue == "position") {
-            // hueScale = d3.scaleOrdinal(d3.schemeCategory10)
-            //     .domain(["Defense", "Midfield", "Attack"]);
             hueScale = d3.scaleOrdinal()
                 .domain(["Defense", "Midfield", "Attack"])
                 .range(["#E04371", "#E0D216", "#4DD0F7"]);
-                // .range(["red", "white", "blue"]);
         }
         else if (generalStatsCTX.attrHue == "preferred_foot") {
             hueScale = d3.scaleOrdinal()
                 .range(["#E04371", "#4DD0F7"]);
-                // .range(["red", "white", "blue"]);
         } else if (generalStatsCTX.attrHue == "weak_foot" || generalStatsCTX.attrHue == "skill_moves") {
             hueScale = d3.scaleLinear()
                 .domain([2, 5])
                 .range(["#E04371", "#4DD0F7"]);
-                // .range(["red", "white", "blue"]);
         }
 
         scatterPlotG.selectAll("circle")
@@ -2531,4 +2541,31 @@ function computeLinearRegression(x_values, y_values) {
 
 function getKeyByValue(object, value) {
     return Object.keys(object).find(key => object[key] === value);
+}
+
+//---------------------------------------------------------------------------------------------------------
+
+function setupCredits(g){
+    g.append("text")
+        .attr("x", 0)
+        .attr("y", 30)
+        .attr("font-size", 30)
+        .attr("font-weight", "bold")
+        .attr("fill", "grey")
+        .text("FIFA Scouting Dashboard")
+    lines = [
+        "A project by Thomas Wimmer and Haileleul Haile.",
+        "Developed as the final project of the Data Visualization Class (INF552) of École Polytechnique.",
+        "Dataset taken from https://www.kaggle.com/datasets/stefanoleone992/fifa-22-complete-player-dataset."
+    ]
+    g.selectAll(".creditLine")
+        .data(lines)
+        .enter()
+        .append("text")
+        .attr("class", "creditLine")
+        .attr("x", 0)
+        .attr("y", (d, i) => 60 + 20 * i)
+        .attr("font-size", 15)
+        .attr("fill", "grey")
+        .text(d => d);
 }
