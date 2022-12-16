@@ -32,7 +32,7 @@
   }
 
   .scatterAttrdropbtn {
-    background-color: #18414e;
+    background-color: #6C8289;
     color: white;
     padding: 8px;
     font-size: 16px;
@@ -48,8 +48,13 @@
   }
   
   /* Dropdown button on hover & focus */
-  .dropbtn:hover, .dropbtn:focus {
+  .dropbtn:hover {
     background-color: #3e8e41;
+  }
+
+  /* Dropdown button on hover & focus */
+  .scatterAttrdropbtn:hover {
+    background-color: #9DBDC7;
   }
   
   /* The search field */
@@ -146,6 +151,32 @@
   
   /* Change color of dropdown links on hover */
   .dropdown-content a:hover {background-color: #48B548}
+
+  /* Dropdown Content (Hidden by Default) */
+  .dropdown-content-attributes {
+    display: none;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    position: absolute;
+    background-color: #18414e;
+    width: 300px;
+    height: 300px;
+    /* border: 1px solid #ddd; */
+    z-index: 1;
+  }
+  
+  /* Links inside the dropdown */
+  .dropdown-content-attributes a {
+    color: white;
+    padding: 12px 16px;
+    /* text-decoration: none; */
+    display: block;
+    font-size: 16px;
+    font-family: sans-serif;
+  }
+  
+  /* Change color of dropdown links on hover */
+  .dropdown-content-attributes a:hover {background-color: #9DBDC7}
   
   /* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
   .show {display:block;}
