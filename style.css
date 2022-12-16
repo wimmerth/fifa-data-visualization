@@ -51,10 +51,14 @@
   .dropbtn:hover {
     background-color: #3e8e41;
   }
-
+  
   /* Dropdown button on hover & focus */
   .scatterAttrdropbtn:hover {
     background-color: #9DBDC7;
+  }
+  
+  .attrdropbtn:hover{
+    background-color: #3e8e41;
   }
   
   /* The search field */
