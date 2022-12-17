@@ -100,10 +100,10 @@ function createViz() {
     rootG.append("g").attr("id", "bkgG");
     rootG.append("g").attr("id", "footballfieldG");
     rootG.append("g").attr("id", "bestPlayerListG");
-    rootG.append("g").attr("id", "playerDetailG");
     rootG.append("g").attr("id", "playersComparisonG");
     rootG.append("g").attr("id", "generalStatsG");
     rootG.append("g").attr("id", "yearSelectionG").attr("transform", "translate(550, 0)");
+    rootG.append("g").attr("id", "playerDetailG");
     let background = d3.select("#bkgG");
     background.append("rect")
     .attr("x", 0)
@@ -215,6 +215,12 @@ function loadData() {
 function initPlots(data) {
     initBestPlayerList(data);
     createRadar("statsG", "rootG", data, getGroupStatsCfg(), "group");
+    
+    let popupG = d3.select("#rootG")
+        .append("g")
+        .attr("id", "popupG4")
+        .attr("transform", `translate(${getGroupStatsCfg().x-getGroupStatsCfg().w / 2}, ${getGroupStatsCfg().y-getGroupStatsCfg().h / 2})`);
+    addInformationBubble(popupG, ["The radar plot gives you valuable insight into the", "profiles of players in different areas of the field.", "The different hexagons provide information about", "the distribution (quartiles and median) of the", "six key attributes."], "#6C8289", "white");
     createRadar("playerStatsG", "playerDetailG", data, getPlayerStatsCfg(), "individual");
     createRadar("comparisonRadarG", "playersComparisonG", data, getComparisonStatsCfg(), "comparison");
 
@@ -1220,7 +1226,7 @@ function initPlayerDetailView() {
     popupG = playerDetailG.append("g")
         .attr("id", "popupG3")
         .attr("transform", "translate(-25,-5)");
-    addInformationBubble(popupG, ["Hover over single attributes to compare the value", "against other players in the selected area, and", "the attribute value history for the player.", "Also, check what happens when hovering","over the overall value."], "#6C8289", "white");
+    addInformationBubble(popupG, ["Hover over single attributes to compare the value", "against other players in the selected area, and", "the attribute value history for the player.", "A similar feature can be discovered when", "hovering over the Overall value."], "#6C8289", "white");
 }
 
 function updatePlayerDetailView(player) {
@@ -1895,26 +1901,9 @@ function updateComparison1(playerNo, player) {
             document.getElementById(`player${playerNo}LinePlot`)
         );
     }
-    if (document.getElementById(`comparisonTitle`) != null) {
-        document.getElementById("comparison1").removeChild(
-            document.getElementById("comparisonTitle")
-        );
-    }
     let linePlot = d3.select("#comparison1").append("g")
         .attr("id", `player${playerNo}LinePlot`)
         .attr("transform", "translate(5, 5)");
-
-
-    d3.select("#comparison1")
-        .append("g")
-        .attr("id", "comparisonTitle")
-        .append("text")
-        .attr("x", 1070)
-        .attr("y", 30)
-        .attr("font-size", 20)
-        .attr("fill", "#18414e")
-        .attr("text-anchor", "end")
-        .text(ctx.comparisonAttrRef);
 
     let currentYear = player.year;
     let playerId = player.sofifa_id;
@@ -2015,16 +2004,6 @@ function updateComparisonAttr(player1, player2) {
             .duration(1000)
             .attr("d", linePlayer2);
     }
-    document.getElementById(`comparisonTitle`).innerHTML = '';
-    d3.select("#comparisonTitle")
-        .append("text")
-        .attr("x", 1070)
-        .attr("y", 30)
-        .attr("font-size", 20)
-        .attr("fill", "#18414e")
-        .attr("text-anchor", "end")
-        .text(ctx.comparisonAttrRef);
-
     drawRadar("comparisonRadarG", "playersComparisonG", Object.values(ctx.comparisonPlayers), getComparisonStatsCfg(), "comparison");
 
 }
@@ -2053,9 +2032,9 @@ function getComparisonStatsCfg(data) {
 //---------------------------------------------------------------------------------------------------------
 
 const generalStatsCTX = {
-    attrX: "age",
-    attrY: "pace",
-    attrHue: "preferred_foot",
+    attrX: "overall",
+    attrY: "wage_eur",
+    attrHue: "league_name",
     position_map: {
         "LB": "Defense",
         "LCB": "Defense",
@@ -2222,10 +2201,9 @@ function initVariableScatterPlot(g) {
     let xAxis = d3.axisBottom(xYearsScale);
     let yAxis = d3.axisLeft(yRatingScale);
 
-    let hueScale = d3.scaleOrdinal(d3.schemeCategory10)
-        .domain(generalStatsCTX.relevantPlayers.map(d => d[generalStatsCTX.attrHue]))
-        .range(['#4DD0F7','#27E8AB', '#E04371', '#867C9C', '#7C9C81', '#E8E8E8']);
-    
+    let hueScale = d3.scaleOrdinal()
+            .range(['#4DD0F7','#27E8AB', '#E04371', '#867C9C', '#7C9C81', '#E8E8E8']);
+        
     if (generalStatsCTX.attrHue == "position") {
         hueScale = d3.scaleOrdinal()
             .domain(["Defense", "Midfield", "Attack"])
@@ -2238,9 +2216,6 @@ function initVariableScatterPlot(g) {
         hueScale = d3.scaleLinear()
             .domain([2, 5])
             .range(["#E04371", "#4DD0F7"]);
-    } else if (generalStatsCTX.attrHue == "league_name") {
-        hueScale = d3.scaleOrdinal(d3.schemeCategory10)
-            .domain(generalStatsCTX.important_leagues.concat(["Other"]));
     }
 
     let xAxisG = g.append("g")
@@ -2324,15 +2299,16 @@ function initVariableScatterPlot(g) {
     scatteredPoints.append("title")
         .text(d => `${d.short_name} (${d.position})\n${d.club_name}\n${d.nationality_name}`);
 
+        
+    let legend = g.append("g")
+        .attr("id", "legend")
+        .attr("transform", "translate(0, 0)");
+        
     popupG = g.append("g")
         .attr("id", "popupG")
         .attr("transform", "translate(700, 30)");
     addInformationBubble(popupG, ["We found that there are various interesting attribute combinations:", " - Age (x) vs Acceleration (y) vs Preferred Foot (hue)", " - Overall (x) vs Wage (y) vs League (hue)", " - Age (x) vs Penalties (y) vs Position (hue)", " - Dribbling (x) vs Ball Control (y) vs Skill Moves (hue)"], "#6C8289", "white");
 
-    let legend = g.append("g")
-        .attr("id", "legend")
-        .attr("transform", "translate(0, 0)");
-    
     legend.append("text")
         .attr("id", "legendTitle")
         .attr("x", 550)
