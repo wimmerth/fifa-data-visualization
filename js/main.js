@@ -35,11 +35,13 @@ const ctx = {
     comparisonPlayers: {},
     radarAxisNames: ["Pace", "Shooting", "Passing", "Dribbling", "Defending", "Physic"],
     selectedPositions: [],
+    club_league: {},
+    club_image: {},
 }
 
 function setupYearSelection(yearSelection){
     // Year selection with "scrollable" buttons to select the year
-    let yearList = [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022];
+    let yearList = [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023];
     years = yearSelection.selectAll("g")
         .data(yearList)
         .enter()
@@ -193,11 +195,137 @@ function loadData() {
             } else {
                 playersPerYear[year] = [row];
             }
+            ctx.club_league[row["club_name"]] = row["league_name"];
+            ctx.club_image[row["club_name"]] = row["club_logo_url"];
         }
         console.log("Number of years: " + Object.keys(playersPerYear).length);
         console.log("Number of players in " + ctx.YEAR + ": " + playersPerYear[ctx.YEAR].length);
         ctx.playersPerYear = playersPerYear;
-        ctx.currentDataSelection = playersPerYear[ctx.YEAR];
+        loadData23();
+        
+    }).catch((error) => {
+        console.log(error);
+    });
+}
+
+function loadData23(){
+    d3.csv("fifa_players_23.csv").then((data) => {
+        console.log("Number of rows (2023): " + data.length);
+        for (let i = 0; i < data.length; i++) {
+            let row_old = data[i];
+            let row = {};
+            row["sofifa_id"] = parseIDfromImageLink(row_old["Image Link"]);
+            //row["player_url"] = none;
+            row["short_name"] = row_old["Known As"];
+            row["long_name"] = row_old["Full Name"];
+            row["player_positions"] = row_old["Positions Played"];
+            row["overall"] = row_old["Overall"];
+            row["potential"] = row_old["Potential"];
+            row["value_eur"] = row_old["Value(in Euro)"];
+            row["wage_eur"] = row_old["Wage(in Euro)"];
+            row["age"] = row_old["Age"];
+            //row["dob"] = none;
+            row["height_cm"] = row_old["Height(in cm)"];
+            row["weight_kg"] = row_old["Weight(in kg)"];
+            //row["club_team_id"] = none; // could be parsed from image url
+            row["club_name"] = row_old["Club Name"];
+            if (!(row["club_name"] in ctx.club_league)){
+                row["league_name"] = "Unknown";
+            } else {
+                row["league_name"] = ctx.club_league[row["club_name"]];
+            }
+            //row["league_level"] = none;
+            row["club_position"] = row_old["Club Position"];
+            row["club_jersey_number"] = row_old["Club Jersey Number"];
+            //row["club_loaned_from"] = none;
+            //row["club_joined"] = none;
+            row["club_contract_valid_until"] = row_old["Contract Until"];
+            //row["nationality_id"] = none; // could be parsed from image url
+            row["nationality_name"] = row_old["National Team Name"];
+            //row["nation_team_id"] = none; // could be parsed from image url
+            row["nation_position"] = row_old["National Team Position"];
+            row["nation_jersey_number"] = row_old["National Team Jersey Number"];
+            row["preferred_foot"] = row_old["Preferred Foot"];
+            row["weak_foot"] = row_old["Weak Foot Rating"];
+            row["skill_moves"] = row_old["Skill Moves"];
+            row["international_reputation"] = row_old["International Reputation"];
+            row["work_rate"] = row_old["Attacking Work Rate"]; // or 'Defensive Work Rate'
+            //row["body_type"] = none;
+            //row["real_face"] = none;
+            row["release_clause_eur"] = row_old["Release Clause"];
+            //row["player_tags"] = none;
+            row["pace"] = row_old["Pace Total"];
+            row["shooting"] = row_old["Shooting Total"];
+            row["passing"] = row_old["Passing Total"];
+            row["dribbling"] = row_old["Dribbling Total"];
+            row["defending"] = row_old["Defending Total"];
+            row["physic"] = row_old["Physicality Total"];
+            row["attacking_crossing"] = row_old["Crossing"];
+            row["attacking_finishing"] = row_old["Finishing"];
+            row["attacking_heading_accuracy"] = row_old["Heading Accuracy"];
+            row["attacking_short_passing"] = row_old["Short Passing"];
+            row["attacking_volleys"] = row_old["Volleys"];
+            row["skill_dribbling"] = row_old["Dribbling"];
+            row["skill_curve"] = row_old["Curve"];
+            row["skill_fk_accuracy"] = row_old["Freekick Accuracy"];
+            row["skill_long_passing"] = row_old["LongPassing"];
+            row["skill_ball_control"] = row_old["BallControl"];
+            row["movement_acceleration"] = row_old["Acceleration"];
+            row["movement_sprint_speed"] = row_old["Sprint Speed"];
+            row["movement_agility"] = row_old["Agility"];
+            row["movement_reactions"] = row_old["Reactions"];
+            row["movement_balance"] = row_old["Balance"];
+            row["power_shot_power"] = row_old["Shot Power"];
+            row["power_jumping"] = row_old["Jumping"];
+            row["power_stamina"] = row_old["Stamina"];
+            row["power_strength"] = row_old["Strength"];
+            row["power_long_shots"] = row_old["Long Shots"];
+            row["mentality_aggression"] = row_old["Aggression"];
+            row["mentality_interceptions"] = row_old["Interceptions"];
+            row["mentality_positioning"] = row_old["Positioning"];
+            row["mentality_vision"] = row_old["Vision"];
+            row["mentality_penalties"] = row_old["Penalties"];
+            row["mentality_composure"] = row_old["Composure"];
+            row["defending_marking_awareness"] = row_old["Marking"];
+            row["defending_standing_tackle"] = row_old["Standing Tackle"];
+            row["defending_sliding_tackle"] = row_old["Sliding Tackle"];
+            row["goalkeeping_diving"] = row_old["Goalkeeper Diving"];
+            row["goalkeeping_handling"] = row_old["Goalkeeper Handling"];
+            row["goalkeeping_kicking"] = row_old[" GoalkeeperKicking"];
+            row["goalkeeping_positioning"] = row_old["Goalkeeper Positioning"];
+            row["goalkeeping_reflexes"] = row_old["Goalkeeper Reflexes"];
+            row["goalkeeping_speed"] = "";
+            row["player_face_url"] = row_old["Image Link"];
+            // replace _60.png with _120.png
+            row["player_face_url"] = row["player_face_url"].replace("_60.png", "_120.png");
+
+            if (!(row["club_name"] in ctx.club_image)){
+                row["club_logo_url"] = "";
+            } else {
+                row["club_logo_url"] = ctx.club_image[row["club_name"]];
+            }
+
+            row["nation_flag_url"] = row_old["National Team Image Link"];
+            row["year"] = 2023;
+
+            let year = 2023;
+            let position = parsePosition(row["club_position"], row["player_positions"]);
+            if (row["league_name"] == ""){
+                row["league_name"] = "Unknown";
+            }
+            if (row["club_name"] == ""){
+                row["club_name"] = "Unknown";
+            }
+            row["position"] = position;
+            if (year in ctx.playersPerYear) {
+                ctx.playersPerYear[year].push(row);
+            } else {
+                ctx.playersPerYear[year] = [row];
+            }
+        }
+        console.log("Number of players in 2023: " + ctx.playersPerYear[2023].length);
+        
+        ctx.currentDataSelection = ctx.playersPerYear[ctx.YEAR];
         
         initPlots(ctx.playersPerYear[ctx.YEAR]);
         initSelectors(ctx.playersPerYear[ctx.YEAR]);
@@ -210,6 +338,12 @@ function loadData() {
     }).catch((error) => {
         console.log(error);
     });
+}
+
+function parseIDfromImageLink(link){
+    // parse https://cdn.sofifa.com/players/ABC/DEF/23_60.png to ABCDEF
+    let id = link.split("/")[4] + link.split("/")[5];
+    return parseInt(id);
 }
 
 function initPlots(data) {
@@ -1441,7 +1575,7 @@ function attributeHistoryPlot(player, attr, G, width, height) {
     });
     // console.log(history, playerId, currentYear, history_min, history_max);
     let xScale = d3.scaleLinear()
-        .domain([2015, 2022])
+        .domain([2015, 2023])
         .range([27, width - 12]);
 
     let yScale = d3.scaleLinear()
@@ -1467,7 +1601,7 @@ function attributeHistoryPlot(player, attr, G, width, height) {
 
     // append an axis showing ticks for each year
     let xAxis = d3.axisBottom(xScale)
-        .tickValues([2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022])
+        .tickValues([2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023])
         .tickFormat(d3.format("d"));
 
     xAxisG = G.append("g")
@@ -1507,7 +1641,7 @@ function attributeHistoryPlot(player, attr, G, width, height) {
 function attributeHistory(playerId, attribute) {
     let attributeHistory = [];
     // add values of attribute for the player with playerId to attributeHistory
-    for (let i = 2015; i < 2023; i++) {
+    for (let i = 2015; i < 2024; i++) {
         let data = ctx.playersPerYear[i];
         for (let j = 0; j < data.length; j++) {
             found = false;
@@ -1831,7 +1965,7 @@ function addPlayerFace(rootId, x, y, w, h, playerNo) {
 }
 
 function drawComparisonAxis(x, y) {
-    let years = [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022];
+    let years = [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023];
     let width = 700;
     let height = 400;
     let axis = d3.select("g#playersComparisonG").append("g").attr("id", "comparison1");
@@ -2090,7 +2224,7 @@ function initGeneralDataAnalysis() {
             }
         }
     generalStatsCTX.relevantAttrs = attrRef;
-    generalStatsCTX.relevantPlayers = ctx.playersPerYear[ctx.YEAR].filter(p => p.overall > 75 && p.position != "GK")
+    generalStatsCTX.relevantPlayers = ctx.playersPerYear[2023].filter(p => p.overall > 75 && p.position != "GK")
         .sort((a, b) => b.overall - a.overall).slice(0, 200);
     initVariableScatterPlot(scatterPlotG);
 }
